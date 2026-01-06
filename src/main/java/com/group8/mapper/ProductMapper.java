@@ -1,10 +1,9 @@
 package com.group8.mapper;
 
 import com.group8.entity.BuyerQueryParam;
+import com.group8.entity.Category;
 import com.group8.entity.Product;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -44,4 +43,36 @@ public interface ProductMapper {
      */
     List<Product> getAllProducts(@Param("queryParam") BuyerQueryParam queryParam);
 
+
+
+    /**
+     * 获取商品分类列表
+     */
+    @Select("select * from categories")
+    List<Category> getCategories();
+
+    /**
+     * 获取某类别下的所有对应商品信息
+     */
+    List<Product> getProductsByCategoryId(@Param("categoryId") Integer categoryId);
+
+    /**
+     * 创建商品分类类目
+     */
+    @Insert("insert into categories(name) values(#{name})")
+    void addCategory(Category category);
+
+
+    /**
+     * 更新商品分类类目
+     */
+    @Update("UPDATE categories SET name = #{name} WHERE id = #{id}")
+    void updateCategory(@Param("id") Integer id, @Param("name") String name);
+
+    /**
+     * 删除商品分类类目
+     * @param categoryId
+     */
+    @Delete("DELETE FROM categories WHERE id = #{categoryId}")
+    void deleteCategory(Integer categoryId);
 }

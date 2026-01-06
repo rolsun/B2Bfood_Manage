@@ -19,5 +19,5 @@ public class Product {
     private Integer stock;
     //支持一张图
     private String image;
-    private Integer supplier_id;
+    private Long supplierId;
 }

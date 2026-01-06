@@ -1,2 +1,0 @@
-INSERT INTO `b2b_food-manage`.products (productId, name, categoryId, unit, price, stock, description, image, supplier_id) VALUES (11, '真大力士菠菜', 2, '斤', 3.00, 320, '一个吃了能让你变成大力士的菠菜', 'https://loremflickr.com/400/400?lock=7978033211812833', 39);
-INSERT INTO `b2b_food-manage`.products (productId, name, categoryId, unit, price, stock, description, image, supplier_id) VALUES (12, '开梓晨', 100, '个', 710.77, 23, '下她话五类。知何较头想动。质发转器决及写越其相。千率红。连长温正听值细十海。', 'https://loremflickr.com/400/400?lock=7772971822460621', 39);

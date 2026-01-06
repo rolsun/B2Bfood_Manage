@@ -7,7 +7,7 @@
     <!--供应商创建商品-->
     <insert id="add" parameterType="com.group8.entity.Product">
         insert into products(name,categoryId,unit,price,description,stock,image,supplier_id)
-            values(#{name},#{categoryId},#{unit},#{price},#{description},#{stock},#{image},#{supplier_id})
+            values(#{name},#{categoryId},#{unit},#{price},#{description},#{stock},#{image},#{supplierId})
             </insert>
 
     <!--供应商更新商品-->
@@ -43,6 +43,10 @@
         limit #{queryParam.page},#{queryParam.limit}
     </select>
 
+    <!-- 获取某类别下的所有商品信息-->
+    <select id="getProductsByCategoryId" resultType="com.group8.entity.Product">
+        select * from products where categoryId=#{categoryId}
+    </select>
 
 
 </mapper>
