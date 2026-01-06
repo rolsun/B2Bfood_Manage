@@ -1,7 +1,6 @@
 package com.group8.service;
 
 import com.group8.entity.User;
-import com.group8.entity.Role;
 import java.util.List;
 import java.util.Map;
 
@@ -38,20 +37,6 @@ public interface UserService {
     int count(Map<String, Object> params);
     
     /**
-     * 创建用户
-     * @param user 用户信息
-     * @return 用户信息
-     */
-    User create(User user);
-    
-    /**
-     * 更新用户信息
-     * @param user 用户信息
-     * @return 用户信息
-     */
-    User update(User user);
-    
-    /**
      * 更新用户状态
      * @param id 用户ID
      * @param status 用户状态
@@ -73,19 +58,4 @@ public interface UserService {
      * @return 登录成功的用户信息
      */
     User login(String username, String password);
-    
-    /**
-     * 获取用户角色列表
-     * @param userId 用户ID
-     * @return 角色列表
-     */
-    List<Role> getUserRoles(Integer userId);
-    
-    /**
-     * 给用户分配角色
-     * @param userId 用户ID
-     * @param roleId 角色ID
-     * @return 影响行数
-     */
-    int assignRole(Integer userId, Integer roleId);
 }

@@ -4,42 +4,27 @@
     <resultMap id="AfterSalesResultMap" type="com.group8.entity.AfterSales">
         <id property="id" column="id" />
         <result property="orderId" column="order_id" />
-        <result property="orderItemId" column="order_item_id" />
         <result property="buyerId" column="buyer_id" />
         <result property="sellerId" column="seller_id" />
         <result property="afterSalesType" column="after_sales_type" />
         <result property="status" column="status" />
         <result property="reason" column="reason" />
-        <result property="description" column="description" />
-        <result property="images" column="images" typeHandler="com.group8.handler.JsonArrayTypeHandler" />
         <result property="refundAmount" column="refund_amount" />
-        <result property="actualRefundAmount" column="actual_refund_amount" />
         <result property="reviewComment" column="review_comment" />
-        <result property="shippingCompany" column="shipping_company" />
-        <result property="trackingNumber" column="tracking_number" />
-        <result property="returnNote" column="return_note" />
-        <result property="receiveStatus" column="receive_status" />
-        <result property="receiveNote" column="receive_note" />
-        <result property="createTime" column="create_time" />
-        <result property="updateTime" column="update_time" />
     </resultMap>
     
     <select id="getById" resultMap="AfterSalesResultMap">
         SELECT 
-            id, order_id, order_item_id, buyer_id, seller_id, after_sales_type, status, 
-            reason, description, images, refund_amount, actual_refund_amount, 
-            review_comment, shipping_company, tracking_number, return_note, 
-            receive_status, receive_note, create_time, update_time
+            id, order_id, buyer_id, seller_id, after_sales_type, status, 
+            reason, refund_amount, review_comment
         FROM after_sales
         WHERE id = #{id}
     </select>
     
     <select id="list" resultMap="AfterSalesResultMap">
         SELECT 
-            id, order_id, order_item_id, buyer_id, seller_id, after_sales_type, status, 
-            reason, description, images, refund_amount, actual_refund_amount, 
-            review_comment, shipping_company, tracking_number, return_note, 
-            receive_status, receive_note, create_time, update_time
+            id, order_id, buyer_id, seller_id, after_sales_type, status, 
+            reason, refund_amount, review_comment
         FROM after_sales
         <where>
             <if test="params.buyerId != null">
@@ -54,14 +39,8 @@
             <if test="params.afterSalesType != null">
                 AND after_sales_type = #{params.afterSalesType}
             </if>
-            <if test="params.startTime != null">
-                AND create_time >= #{params.startTime}
-            </if>
-            <if test="params.endTime != null">
-                AND create_time <= #{params.endTime}
-            </if>
         </where>
-        ORDER BY create_time DESC
+        ORDER BY id DESC
         <if test="params.offset != null and params.limit != null">
             LIMIT #{params.offset}, #{params.limit}
         </if>
@@ -83,22 +62,16 @@
             <if test="params.afterSalesType != null">
                 AND after_sales_type = #{params.afterSalesType}
             </if>
-            <if test="params.startTime != null">
-                AND create_time >= #{params.startTime}
-            </if>
-            <if test="params.endTime != null">
-                AND create_time <= #{params.endTime}
-            </if>
         </where>
     </select>
     
     <insert id="create" parameterType="com.group8.entity.AfterSales" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO after_sales (
-            order_id, order_item_id, buyer_id, seller_id, after_sales_type, status, 
-            reason, description, images, refund_amount, create_time, update_time
+            order_id, buyer_id, seller_id, after_sales_type, status, 
+            reason, refund_amount
         ) VALUES (
-            #{orderId}, #{orderItemId}, #{buyerId}, #{sellerId}, #{afterSalesType}, #{status}, 
-            #{reason}, #{description}, #{images,typeHandler=com.group8.handler.JsonArrayTypeHandler}, #{refundAmount}, NOW(), NOW()
+            #{orderId}, #{buyerId}, #{sellerId}, #{afterSalesType}, #{status}, 
+            #{reason}, #{refundAmount}
         )
     </insert>
     
@@ -106,29 +79,20 @@
         UPDATE after_sales
         SET 
             status = #{status}, 
-            actual_refund_amount = #{actualRefundAmount}, 
-            review_comment = #{reviewComment}, 
-            shipping_company = #{shippingCompany}, 
-            tracking_number = #{trackingNumber}, 
-            return_note = #{returnNote}, 
-            receive_status = #{receiveStatus}, 
-            receive_note = #{receiveNote}, 
-            update_time = NOW()
+            review_comment = #{reviewComment}
         WHERE id = #{id}
     </update>
     
     <update id="updateStatus">
         UPDATE after_sales
-        SET status = #{status}, update_time = NOW()
+        SET status = #{status}
         WHERE id = #{id}
     </update>
     
     <select id="getPendingList" resultMap="AfterSalesResultMap">
         SELECT 
-            id, order_id, order_item_id, buyer_id, seller_id, after_sales_type, status, 
-            reason, description, images, refund_amount, actual_refund_amount, 
-            review_comment, shipping_company, tracking_number, return_note, 
-            receive_status, receive_note, create_time, update_time
+            id, order_id, buyer_id, seller_id, after_sales_type, status, 
+            reason, refund_amount, review_comment
         FROM after_sales
         <where>
             <if test="params.sellerId != null">
@@ -137,9 +101,9 @@
             <if test="params.afterSalesType != null">
                 AND after_sales_type = #{params.afterSalesType}
             </if>
-            AND status = 1 <!-- 待审核 -->
+            AND status = 1
         </where>
-        ORDER BY create_time DESC
+        ORDER BY id DESC
         <if test="params.offset != null and params.limit != null">
             LIMIT #{params.offset}, #{params.limit}
         </if>
@@ -155,7 +119,7 @@
             <if test="params.afterSalesType != null">
                 AND after_sales_type = #{params.afterSalesType}
             </if>
-            AND status = 1 <!-- 待审核 -->
+            AND status = 1
         </where>
     </select>
 </mapper>

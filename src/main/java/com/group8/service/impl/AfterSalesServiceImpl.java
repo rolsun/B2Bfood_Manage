@@ -33,9 +33,6 @@ public class AfterSalesServiceImpl implements AfterSalesService {
         if (afterSales.getOrderId() == null) {
             throw new BusinessException("订单ID不能为空");
         }
-        if (afterSales.getOrderItemId() == null) {
-            throw new BusinessException("订单项ID不能为空");
-        }
         if (afterSales.getBuyerId() == null) {
             throw new BusinessException("采购商ID不能为空");
         }
@@ -161,9 +158,6 @@ public class AfterSalesServiceImpl implements AfterSalesService {
         if (reviewResult == 1) {
             // 审核通过
             afterSales.setStatus(2); // 审核通过
-            if (actualRefundAmount != null) {
-                afterSales.setActualRefundAmount(actualRefundAmount);
-            }
             
             // 根据售后类型设置不同的状态
             if (afterSales.getAfterSalesType() == 1) {
@@ -196,91 +190,15 @@ public class AfterSalesServiceImpl implements AfterSalesService {
     @Override
     @Transactional
     public AfterSales uploadReturnInfo(Integer id, String shippingCompany, String trackingNumber, String returnNote, Integer userId) {
-        if (id == null) {
-            throw new BusinessException("售后申请ID不能为空");
-        }
-        if (shippingCompany == null || shippingCompany.isEmpty()) {
-            throw new BusinessException("物流公司不能为空");
-        }
-        if (trackingNumber == null || trackingNumber.isEmpty()) {
-            throw new BusinessException("运单号不能为空");
-        }
-        
-        AfterSales afterSales = afterSalesMapper.getById(id);
-        if (afterSales == null) {
-            throw new BusinessException("售后申请不存在");
-        }
-        
-        // 验证用户权限，只能上传自己的退货信息
-        if (!afterSales.getBuyerId().equals(userId)) {
-            throw new BusinessException("无权上传此售后申请的退货信息");
-        }
-        
-        // 只有待退货状态的售后申请才能上传退货信息
-        if (afterSales.getStatus() != 4) {
-            throw new BusinessException("售后申请状态不允许上传退货信息");
-        }
-        
-        // 更新退货信息
-        afterSales.setShippingCompany(shippingCompany);
-        afterSales.setTrackingNumber(trackingNumber);
-        afterSales.setReturnNote(returnNote);
-        afterSales.setStatus(5); // 待收货
-        
-        int result = afterSalesMapper.update(afterSales);
-        if (result != 1) {
-            throw new BusinessException("上传退货信息失败");
-        }
-        
-        // 记录操作日志
-        createLog(id, userId, "采购商上传退货信息，物流公司：" + shippingCompany + "，运单号：" + trackingNumber);
-        
-        return afterSales;
+        // 此方法已简化，不再实现具体逻辑
+        throw new BusinessException("此功能已简化，暂不支持");
     }
     
     @Override
     @Transactional
     public AfterSales confirmReceive(Integer id, Integer receiveStatus, String receiveNote, Integer userId) {
-        if (id == null) {
-            throw new BusinessException("售后申请ID不能为空");
-        }
-        if (receiveStatus == null) {
-            throw new BusinessException("收货状态不能为空");
-        }
-        
-        AfterSales afterSales = afterSalesMapper.getById(id);
-        if (afterSales == null) {
-            throw new BusinessException("售后申请不存在");
-        }
-        
-        // 验证用户权限，只能确认自己的售后申请收货
-        if (!afterSales.getSellerId().equals(userId)) {
-            throw new BusinessException("无权确认此售后申请的收货");
-        }
-        
-        // 只有待收货状态的售后申请才能确认收货
-        if (afterSales.getStatus() != 5) {
-            throw new BusinessException("售后申请状态不允许确认收货");
-        }
-        
-        // 更新收货信息
-        afterSales.setReceiveStatus(receiveStatus);
-        afterSales.setReceiveNote(receiveNote);
-        afterSales.setStatus(6); // 已完成
-        
-        int result = afterSalesMapper.update(afterSales);
-        if (result != 1) {
-            throw new BusinessException("确认收货失败");
-        }
-        
-        // 记录操作日志
-        String logContent = receiveStatus == 1 ? "供应商确认收货" : "供应商确认收货但商品有问题";
-        if (receiveNote != null && !receiveNote.isEmpty()) {
-            logContent += "，备注：" + receiveNote;
-        }
-        createLog(id, userId, logContent);
-        
-        return afterSales;
+        // 此方法已简化，不再实现具体逻辑
+        throw new BusinessException("此功能已简化，暂不支持");
     }
     
     @Override

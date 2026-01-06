@@ -50,25 +50,6 @@ public class WalletController {
     }
     
     /**
-     * 钱包提现
-     * @param params 提现参数
-     * @return 交易记录
-     */
-    @PostMapping("/withdraw")
-    public Result<TransactionRecord> withdraw(@RequestBody Map<String, Object> params) {
-        // 模拟当前登录用户ID，实际项目中应从Token中获取
-        Integer userId = 2003;
-        
-        Double amount = (Double) params.get("amount");
-        String bankCardNumber = (String) params.get("bankCardNumber");
-        String bankName = (String) params.get("bankName");
-        String remark = (String) params.get("remark");
-        
-        TransactionRecord record = walletService.withdraw(userId, amount, bankCardNumber, bankName, remark);
-        return Result.success("提现申请已提交", record);
-    }
-    
-    /**
      * 钱包支付
      * @param params 支付参数
      * @return 交易记录

@@ -40,20 +40,6 @@ public interface UserMapper {
     int count(@Param("params") Map<String, Object> params);
     
     /**
-     * 创建用户
-     * @param user 用户信息
-     * @return 影响行数
-     */
-    int create(User user);
-    
-    /**
-     * 更新用户信息
-     * @param user 用户信息
-     * @return 影响行数
-     */
-    int update(User user);
-    
-    /**
      * 更新用户状态
      * @param id 用户ID
      * @param status 用户状态

@@ -2,7 +2,6 @@ package com.group8.controller;
 
 import com.group8.entity.Result;
 import com.group8.entity.User;
-import com.group8.entity.Role;
 import com.group8.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -80,30 +79,6 @@ public class UserController {
     }
     
     /**
-     * 创建用户
-     * @param user 用户信息
-     * @return 用户信息
-     */
-    @PostMapping
-    public Result<User> create(@RequestBody User user) {
-        User createdUser = userService.create(user);
-        return Result.success("创建用户成功", createdUser);
-    }
-    
-    /**
-     * 更新用户信息
-     * @param id 用户ID
-     * @param user 用户信息
-     * @return 用户信息
-     */
-    @PutMapping("/{id}")
-    public Result<User> update(@PathVariable Integer id, @RequestBody User user) {
-        user.setId(id);
-        User updatedUser = userService.update(user);
-        return Result.success("更新用户成功", updatedUser);
-    }
-    
-    /**
      * 更新用户状态
      * @param id 用户ID
      * @param params 更新参数
@@ -125,29 +100,5 @@ public class UserController {
     public Result<Integer> delete(@PathVariable Integer id) {
         int result = userService.delete(id);
         return Result.success("删除用户成功", result);
-    }
-    
-    /**
-     * 获取用户角色列表
-     * @param userId 用户ID
-     * @return 角色列表
-     */
-    @GetMapping("/{userId}/roles")
-    public Result<List<Role>> getUserRoles(@PathVariable Integer userId) {
-        List<Role> roles = userService.getUserRoles(userId);
-        return Result.success(roles);
-    }
-    
-    /**
-     * 给用户分配角色
-     * @param userId 用户ID
-     * @param params 分配参数
-     * @return 影响行数
-     */
-    @PostMapping("/{userId}/roles")
-    public Result<Integer> assignRole(@PathVariable Integer userId, @RequestBody Map<String, Object> params) {
-        Integer roleId = (Integer) params.get("roleId");
-        int result = userService.assignRole(userId, roleId);
-        return Result.success("分配角色成功", result);
     }
 }

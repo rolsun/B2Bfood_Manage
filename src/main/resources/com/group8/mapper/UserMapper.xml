@@ -5,29 +5,27 @@
         <id property="id" column="id" />
         <result property="username" column="username" />
         <result property="password" column="password" />
-        <result property="userType" column="user_type" />
+        <result property="usertype" column="usertype" />
         <result property="status" column="status" />
-        <result property="createTime" column="create_time" />
-        <result property="updateTime" column="update_time" />
     </resultMap>
     
     <select id="getById" resultMap="UserResultMap">
         SELECT 
-            id, username, password, user_type, status, create_time, update_time
+            id, username, password, usertype, status
         FROM users
         WHERE id = #{id}
     </select>
     
     <select id="getByUsername" resultMap="UserResultMap">
         SELECT 
-            id, username, password, user_type, status, create_time, update_time
+            id, username, password, usertype, status
         FROM users
         WHERE username = #{username}
     </select>
     
     <select id="list" resultMap="UserResultMap">
         SELECT 
-            id, username, password, user_type, status, create_time, update_time
+            id, username, password, usertype, status
         FROM users
         <where>
             <if test="params.username != null and params.username != ''">
@@ -36,11 +34,11 @@
             <if test="params.status != null">
                 AND status = #{params.status}
             </if>
-            <if test="params.userType != null">
-                AND user_type = #{params.userType}
+            <if test="params.usertype != null">
+                AND usertype = #{params.usertype}
             </if>
         </where>
-        ORDER BY create_time DESC
+        ORDER BY id DESC
         <if test="params.offset != null and params.limit != null">
             LIMIT #{params.offset}, #{params.limit}
         </if>
@@ -56,34 +54,15 @@
             <if test="params.status != null">
                 AND status = #{params.status}
             </if>
-            <if test="params.userType != null">
-                AND user_type = #{params.userType}
+            <if test="params.usertype != null">
+                AND usertype = #{params.usertype}
             </if>
         </where>
     </select>
     
-    <insert id="create" parameterType="com.group8.entity.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO users (
-            username, password, user_type, status, create_time, update_time
-        ) VALUES (
-            #{username}, #{password}, #{userType}, #{status}, NOW(), NOW()
-        )
-    </insert>
-    
-    <update id="update" parameterType="com.group8.entity.User">
-        UPDATE users
-        SET 
-            username = #{username}, 
-            password = #{password}, 
-            user_type = #{userType}, 
-            status = #{status}, 
-            update_time = NOW()
-        WHERE id = #{id}
-    </update>
-    
     <update id="updateStatus">
         UPDATE users
-        SET status = #{status}, update_time = NOW()
+        SET status = #{status}
         WHERE id = #{id}
     </update>
     

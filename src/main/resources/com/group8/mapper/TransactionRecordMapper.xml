@@ -37,10 +37,10 @@
             AND type = #{params.type}
         </if>
         <if test="params.startTime != null">
-            AND transaction_time >= #{params.startTime}
+            AND transaction_time &gt;= #{params.startTime}
         </if>
         <if test="params.endTime != null">
-            AND transaction_time <= #{params.endTime}
+            AND transaction_time &lt;= #{params.endTime}
         </if>
         ORDER BY transaction_time DESC
         <if test="params.offset != null and params.limit != null">
@@ -56,10 +56,10 @@
             AND type = #{params.type}
         </if>
         <if test="params.startTime != null">
-            AND transaction_time >= #{params.startTime}
+            AND transaction_time &gt;= #{params.startTime}
         </if>
         <if test="params.endTime != null">
-            AND transaction_time <= #{params.endTime}
+            AND transaction_time &lt;= #{params.endTime}
         </if>
     </select>
     

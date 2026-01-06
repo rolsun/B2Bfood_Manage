@@ -106,53 +106,6 @@ public class WalletServiceImpl implements WalletService {
     
     @Override
     @Transactional
-    public TransactionRecord withdraw(Integer userId, Double amount, String bankCardNumber, String bankName, String remark) {
-        if (userId == null) {
-            throw new BusinessException("用户ID不能为空");
-        }
-        if (amount == null || amount <= 0) {
-            throw new BusinessException("提现金额必须大于0");
-        }
-        if (bankCardNumber == null || bankCardNumber.isEmpty()) {
-            throw new BusinessException("银行卡号不能为空");
-        }
-        
-        // 获取用户钱包
-        Wallet wallet = getByUserId(userId);
-        if (wallet.getStatus() != 1) {
-            throw new BusinessException("钱包已冻结，无法进行提现操作");
-        }
-        
-        // 检查余额是否充足
-        if (wallet.getBalance() < amount) {
-            throw new BusinessException("余额不足");
-        }
-        
-        // 更新钱包余额（提现是减少余额，所以金额为负数）
-        int result = walletMapper.updateBalance(wallet.getId(), -amount);
-        if (result != 1) {
-            throw new BusinessException("提现失败");
-        }
-        
-        // 创建交易记录
-        TransactionRecord record = new TransactionRecord();
-        record.setWalletId(wallet.getId());
-        record.setType(2); // 2-提现
-        record.setAmount(amount);
-        record.setBalanceAfter(wallet.getBalance() - amount);
-        record.setBankCardNumber(bankCardNumber);
-        record.setRemark(remark);
-        
-        result = transactionRecordMapper.create(record);
-        if (result != 1) {
-            throw new BusinessException("创建交易记录失败");
-        }
-        
-        return record;
-    }
-    
-    @Override
-    @Transactional
     public TransactionRecord pay(Integer userId, Double amount, Integer payeeId, String remark) {
         if (userId == null) {
             throw new BusinessException("付款方用户ID不能为空");

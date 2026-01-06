@@ -3,7 +3,6 @@ package com.group8.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.Date;
 
 /**
  * 用户实体类
@@ -28,22 +27,12 @@ public class User {
     private String password;
     
     /**
-     * 用户类型: 1-采购商, 2-供应商
+     * 用户类型: 1-采购商, 2-供应商, 3-管理员
      */
-    private Integer userType;
+    private Integer usertype;
     
     /**
      * 用户状态: 1-正常, 2-禁用
      */
     private Integer status;
-    
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-    
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
 }

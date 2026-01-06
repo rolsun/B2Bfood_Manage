@@ -34,17 +34,6 @@ public interface WalletService {
     TransactionRecord recharge(Integer userId, Double amount, String paymentMethod, String remark);
     
     /**
-     * 钱包提现
-     * @param userId 用户ID
-     * @param amount 提现金额
-     * @param bankCardNumber 银行卡号
-     * @param bankName 银行名称
-     * @param remark 提现备注
-     * @return 交易记录
-     */
-    TransactionRecord withdraw(Integer userId, Double amount, String bankCardNumber, String bankName, String remark);
-    
-    /**
      * 钱包支付
      * @param userId 付款方用户ID
      * @param amount 支付金额
