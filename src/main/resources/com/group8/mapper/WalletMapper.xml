@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.group8.mapper.WalletMapper">
+    <resultMap id="WalletResultMap" type="com.group8.entity.Wallet">
+        <id property="id" column="id" />
+        <result property="userId" column="user_id" />
+        <result property="balance" column="balance" />
+        <result property="status" column="status" />
+        <result property="lastUpdateTime" column="last_update_time" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+    
+    <select id="getByUserId" resultMap="WalletResultMap">
+        SELECT id, user_id, balance, status, last_update_time, create_time
+        FROM wallets
+        WHERE user_id = #{userId}
+    </select>
+    
+    <select id="getById" resultMap="WalletResultMap">
+        SELECT id, user_id, balance, status, last_update_time, create_time
+        FROM wallets
+        WHERE id = #{id}
+    </select>
+    
+    <insert id="create" parameterType="com.group8.entity.Wallet" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO wallets (user_id, balance, status, last_update_time, create_time)
+        VALUES (#{userId}, #{balance}, #{status}, NOW(), NOW())
+    </insert>
+    
+    <update id="updateBalance">
+        UPDATE wallets
+        SET balance = balance + #{amount}, last_update_time = NOW()
+        WHERE id = #{id}
+    </update>
+    
+    <update id="updateStatus">
+        UPDATE wallets
+        SET status = #{status}, last_update_time = NOW()
+        WHERE id = #{id}
+    </update>
+</mapper>

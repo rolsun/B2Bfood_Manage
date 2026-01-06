@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.group8.mapper.StatisticsMapper">
+    <select id="getSalesStatistics" resultType="java.util.Map">
+        SELECT 
+            COUNT(*) AS salesCount,
+            SUM(amount) AS salesAmount
+        FROM transaction_records
+        WHERE type = 3
+        <if test="params.startTime != null">
+            AND transaction_time &gt;= #{params.startTime}
+        </if>
+        <if test="params.endTime != null">
+            AND transaction_time &lt;= #{params.endTime}
+        </if>
+    </select>
+    
+    <select id="getSalesTrend" resultType="java.util.Map">
+        SELECT 
+            DATE_FORMAT(transaction_time, '%Y-%m-%d') AS date,
+            COUNT(*) AS salesCount,
+            SUM(amount) AS salesAmount
+        FROM transaction_records
+        WHERE type = 3
+        <if test="params.startTime != null">
+            AND transaction_time &gt;= #{params.startTime}
+        </if>
+        <if test="params.endTime != null">
+            AND transaction_time &lt;= #{params.endTime}
+        </if>
+        GROUP BY DATE_FORMAT(transaction_time, '%Y-%m-%d')
+        ORDER BY date
+    </select>
+    
+    <select id="getUserStatistics" resultType="java.util.Map">
+        SELECT 
+            COUNT(*) AS totalUsers,
+            SUM(CASE WHEN usertype = 1 THEN 1 ELSE 0 END) AS buyers,
+            SUM(CASE WHEN usertype = 2 THEN 1 ELSE 0 END) AS sellers
+        FROM users
+    </select>
+    
+    <select id="getTransactionStatistics" resultType="java.util.Map">
+        SELECT 
+            COUNT(*) AS totalTransactions,
+            SUM(amount) AS totalAmount,
+            SUM(CASE WHEN type = 1 THEN 1 ELSE 0 END) AS rechargeCount,
+            SUM(CASE WHEN type = 2 THEN 1 ELSE 0 END) AS withdrawCount,
+            SUM(CASE WHEN type = 3 THEN 1 ELSE 0 END) AS paymentCount
+        FROM transaction_records
+        <if test="params.startTime != null">
+            AND transaction_time &gt;= #{params.startTime}
+        </if>
+        <if test="params.endTime != null">
+            AND transaction_time &lt;= #{params.endTime}
+        </if>
+    </select>
+</mapper>

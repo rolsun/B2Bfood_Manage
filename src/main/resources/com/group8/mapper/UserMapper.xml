@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.group8.mapper.UserMapper">
+    <resultMap id="UserResultMap" type="com.group8.entity.User">
+        <id property="id" column="id" />
+        <result property="username" column="username" />
+        <result property="password" column="password" />
+        <result property="usertype" column="usertype" />
+        <result property="status" column="status" />
+    </resultMap>
+    
+    <select id="getById" resultMap="UserResultMap">
+        SELECT 
+            id, username, password, usertype, status
+        FROM users
+        WHERE id = #{id}
+    </select>
+    
+    <select id="getByUsername" resultMap="UserResultMap">
+        SELECT 
+            id, username, password, usertype, status
+        FROM users
+        WHERE username = #{username}
+    </select>
+    
+    <select id="list" resultMap="UserResultMap">
+        SELECT 
+            id, username, password, usertype, status
+        FROM users
+        <where>
+            <if test="params.username != null and params.username != ''">
+                AND username LIKE CONCAT('%', #{params.username}, '%')
+            </if>
+            <if test="params.status != null">
+                AND status = #{params.status}
+            </if>
+            <if test="params.usertype != null">
+                AND usertype = #{params.usertype}
+            </if>
+        </where>
+        ORDER BY id DESC
+        <if test="params.offset != null and params.limit != null">
+            LIMIT #{params.offset}, #{params.limit}
+        </if>
+    </select>
+    
+    <select id="count" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM users
+        <where>
+            <if test="params.username != null and params.username != ''">
+                AND username LIKE CONCAT('%', #{params.username}, '%')
+            </if>
+            <if test="params.status != null">
+                AND status = #{params.status}
+            </if>
+            <if test="params.usertype != null">
+                AND usertype = #{params.usertype}
+            </if>
+        </where>
+    </select>
+    
+    <update id="updateStatus">
+        UPDATE users
+        SET status = #{status}
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="delete">
+        DELETE FROM users WHERE id = #{id}
+    </delete>
+</mapper>

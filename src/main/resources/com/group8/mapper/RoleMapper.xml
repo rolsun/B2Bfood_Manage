@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.group8.mapper.RoleMapper">
+    <resultMap id="RoleResultMap" type="com.group8.entity.Role">
+        <id property="id" column="id" />
+        <result property="roleName" column="role_name" />
+        <result property="description" column="description" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+    
+    <select id="getById" resultMap="RoleResultMap">
+        SELECT id, role_name, description, create_time, update_time
+        FROM roles
+        WHERE id = #{id}
+    </select>
+    
+    <select id="list" resultMap="RoleResultMap">
+        SELECT id, role_name, description, create_time, update_time
+        FROM roles
+        ORDER BY create_time DESC
+    </select>
+    
+    <select id="listByUserId" resultMap="RoleResultMap">
+        SELECT r.id, r.role_name, r.description, r.create_time, r.update_time
+        FROM roles r
+        INNER JOIN user_roles ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <insert id="create" parameterType="com.group8.entity.Role" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO roles (role_name, description, create_time, update_time)
+        VALUES (#{roleName}, #{description}, NOW(), NOW())
+    </insert>
+    
+    <update id="update" parameterType="com.group8.entity.Role">
+        UPDATE roles
+        SET role_name = #{roleName}, description = #{description}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="delete">
+        DELETE FROM roles WHERE id = #{id}
+    </delete>
+    
+    <insert id="assignRole">
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES (#{userId}, #{roleId})
+    </insert>
+    
+    <delete id="unassignRole">
+        DELETE FROM user_roles WHERE user_id = #{userId}
+    </delete>
+</mapper>

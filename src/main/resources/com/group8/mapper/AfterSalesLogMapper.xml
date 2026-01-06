@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.group8.mapper.AfterSalesLogMapper">
+    <resultMap id="AfterSalesLogResultMap" type="com.group8.entity.AfterSalesLog">
+        <id property="id" column="id" />
+        <result property="afterSalesId" column="after_sales_id" />
+        <result property="operatorId" column="operator_id" />
+        <result property="operatorName" column="operator_name" />
+        <result property="operationContent" column="operation_content" />
+        <result property="operationTime" column="operation_time" />
+    </resultMap>
+    
+    <insert id="create" parameterType="com.group8.entity.AfterSalesLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO after_sales_logs (after_sales_id, operator_id, operator_name, operation_content, operation_time)
+        VALUES (#{afterSalesId}, #{operatorId}, #{operatorName}, #{operationContent}, NOW())
+    </insert>
+    
+    <select id="listByAfterSalesId" resultMap="AfterSalesLogResultMap">
+        SELECT id, after_sales_id, operator_id, operator_name, operation_content, operation_time
+        FROM after_sales_logs
+        WHERE after_sales_id = #{afterSalesId}
+        ORDER BY operation_time DESC
+    </select>
+</mapper>

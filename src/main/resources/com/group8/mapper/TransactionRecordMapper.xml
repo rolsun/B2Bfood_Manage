@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.group8.mapper.TransactionRecordMapper">
+    <resultMap id="TransactionRecordResultMap" type="com.group8.entity.TransactionRecord">
+        <id property="id" column="id" />
+        <result property="walletId" column="wallet_id" />
+        <result property="type" column="type" />
+        <result property="amount" column="amount" />
+        <result property="balanceAfter" column="balance_after" />
+        <result property="paymentMethod" column="payment_method" />
+        <result property="bankCardNumber" column="bank_card_number" />
+        <result property="payeeId" column="payee_id" />
+        <result property="transactionTime" column="transaction_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+    
+    <insert id="create" parameterType="com.group8.entity.TransactionRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO transaction_records (
+            wallet_id, type, amount, balance_after, 
+            payment_method, bank_card_number, payee_id, 
+            transaction_time, remark
+        ) VALUES (
+            #{walletId}, #{type}, #{amount}, #{balanceAfter}, 
+            #{paymentMethod}, #{bankCardNumber}, #{payeeId}, 
+            NOW(), #{remark}
+        )
+    </insert>
+    
+    <select id="getByWalletId" resultMap="TransactionRecordResultMap">
+        SELECT 
+            id, wallet_id, type, amount, balance_after, 
+            payment_method, bank_card_number, payee_id, 
+            transaction_time, remark
+        FROM transaction_records
+        WHERE wallet_id = #{walletId}
+        <if test="params.type != null">
+            AND type = #{params.type}
+        </if>
+        <if test="params.startTime != null">
+            AND transaction_time &gt;= #{params.startTime}
+        </if>
+        <if test="params.endTime != null">
+            AND transaction_time &lt;= #{params.endTime}
+        </if>
+        ORDER BY transaction_time DESC
+        <if test="params.offset != null and params.limit != null">
+            LIMIT #{params.offset}, #{params.limit}
+        </if>
+    </select>
+    
+    <select id="countByWalletId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM transaction_records
+        WHERE wallet_id = #{walletId}
+        <if test="params.type != null">
+            AND type = #{params.type}
+        </if>
+        <if test="params.startTime != null">
+            AND transaction_time &gt;= #{params.startTime}
+        </if>
+        <if test="params.endTime != null">
+            AND transaction_time &lt;= #{params.endTime}
+        </if>
+    </select>
+    
+    <select id="getById" resultMap="TransactionRecordResultMap">
+        SELECT 
+            id, wallet_id, type, amount, balance_after, 
+            payment_method, bank_card_number, payee_id, 
+            transaction_time, remark
+        FROM transaction_records
+        WHERE id = #{id}
+    </select>
+</mapper>
