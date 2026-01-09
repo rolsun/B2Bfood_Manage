@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.group8.mapper.StatisticsMapper">
+
+    <resultMap id="UserRoleStatisticsMap" type="com.group8.entity.UserRoleStatistics">
+        <result column="user_type" property="userType" jdbcType="INTEGER"/>
+        <result column="role_name" property="roleName" jdbcType="VARCHAR"/>
+        <result column="count" property="count" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <resultMap id="ProductCategoryStatisticsMap" type="com.group8.entity.ProductCategoryStatistics">
+        <result column="category_id" property="categoryId" jdbcType="INTEGER"/>
+        <result column="category_name" property="categoryName" jdbcType="VARCHAR"/>
+        <result column="count" property="count" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <!-- 用户角色统计查询 -->
+    <select id="getUserCountByRole" resultMap="UserRoleStatisticsMap">
+        SELECT
+            userType,
+            CASE
+                WHEN userType = 1 THEN '采购商'
+                WHEN userType = 2 THEN '供应商'
+                WHEN userType = 3 THEN '管理员'
+                ELSE '未知角色'
+                END as role_name,
+            COUNT(*) as count
+        FROM users
+        GROUP BY userType
+    </select>
+
+    <!-- 商品类别统计查询 -->
+    <select id="getProductCountByCategory" resultMap="ProductCategoryStatisticsMap">
+        SELECT
+            c.id as category_id,
+            c.name as category_name,  -- 注意：数据库字段是 name，不是 category_name
+            COUNT(p.productId) as count  -- 注意：商品表主键是 productId，不是 id
+        FROM categories c
+            LEFT JOIN products p ON c.id = p.categoryId  -- 注意：外键字段是 categoryId
+        GROUP BY c.id, c.name
+        ORDER BY c.id
+    </select>
+
+</mapper>

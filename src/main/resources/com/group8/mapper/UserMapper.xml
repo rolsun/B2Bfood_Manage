@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.group8.mapper.UserMapper">
+
+    <!-- 用户结果映射 -->
+    <resultMap id="UserResultMap" type="com.group8.entity.User">
+        <id property="userId" column="userId"/>
+        <result property="userName" column="username"/>
+        <result property="password" column="password"/>
+        <result property="userType" column="userType"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="address" column="address"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <!-- 查询用户列表 -->
+    <select id="selectUsers" parameterType="map" resultMap="UserResultMap">
+        SELECT * FROM users
+        <where>
+            <if test="userType != null">
+                AND userType = #{userType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (username LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%')
+                OR email LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY userId DESC
+        LIMIT #{page}, #{limit}
+    </select>
+
+    <!-- 统计用户数量 -->
+    <select id="countUsers" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM users
+        <where>
+            <if test="userType != null">
+                AND userType = #{userType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (username LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%')
+                OR email LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+</mapper>

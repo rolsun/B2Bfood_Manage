@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.group8.mapper.AfterSalesMapper">
+
+    <resultMap id="BaseResultMap" type="com.group8.entity.AfterSales">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="application_content" property="applicationContent" jdbcType="VARCHAR"/>
+        <result column="complained_supplier" property="complainedSupplier" jdbcType="VARCHAR"/>
+        <result column="complained_order" property="complainedOrder" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="created_time" property="createdTime" jdbcType="TIMESTAMP"/>
+        <result column="after_sales_type" property="afterSalesType" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        id, application_content, complained_supplier,
+        complained_order, status, created_time, after_sales_type
+    </sql>
+
+    <!-- 插入新记录 -->
+    <insert id="insert" parameterType="com.group8.entity.AfterSales" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO after_sales_table (
+            application_content,
+            complained_supplier,
+            complained_order,
+            status,
+            created_time,
+            after_sales_type
+        ) VALUES (
+                     #{applicationContent,jdbcType=VARCHAR},
+                     #{complainedSupplier,jdbcType=VARCHAR},
+                     #{complainedOrder,jdbcType=VARCHAR},
+                     #{status,jdbcType=INTEGER},
+                     NOW(),
+                     #{afterSalesType,jdbcType=INTEGER}
+                 )
+    </insert>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM after_sales_table
+        WHERE id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <!-- 更新状态 -->
+    <update id="updateStatus">
+        UPDATE after_sales_table
+        SET status = #{status,jdbcType=INTEGER}
+        WHERE id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 根据供应商ID查询待处理的售后申请 -->
+    <select id="selectBySupplierId" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM after_sales_table
+        WHERE complained_supplier = #{supplierId,jdbcType=VARCHAR}
+        AND status = 1
+    </select>
+
+    <!-- 删除记录 -->
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM after_sales_table
+        WHERE id = #{id,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 根据采购商ID查询售后申请 -->
+    <select id="selectByBuyerId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM after_sales_table
+        WHERE complained_order IN (
+        SELECT order_sn FROM orders WHERE buyer_id = #{buyerId,jdbcType=BIGINT}
+        )
+    </select>
+
+
+</mapper>

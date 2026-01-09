@@ -12,6 +12,10 @@ public class User {
     private String userName;
     private String password;
     private Integer userType;
+    private String phone;      // 新增
+    private String email;      // 新增
+    private String address;    // 新增
+    private Integer status;    // 新增
 
     // 判断是否为管理员
     public boolean isAdmin() {

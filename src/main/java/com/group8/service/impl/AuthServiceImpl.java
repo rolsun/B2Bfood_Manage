@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -27,6 +29,9 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    @Autowired
+    private UserServiceImpl userService;
+
     private static final String BLACKLIST_PREFIX = "blacklist:";
 
 
@@ -38,6 +43,26 @@ public class AuthServiceImpl implements AuthService {
         } else {
             throw new Exception("用户名或密码错误");
         }
+    }
+
+    @Override
+    public Map<String, Object> loginWithUserInfo(String username, String password) {
+        // 1. 验证用户凭据
+        User user = userService.getUserByUsername(username);
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("用户名或密码错误");
+        }
+
+        // 2. 生成 JWT token
+        String token = jwtUtil.generateToken(user);
+
+        // 3. 准备响应数据
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("username", user.getUserName());
+        response.put("userType", user.getUserType());
+
+        return response;
     }
 
     @Override

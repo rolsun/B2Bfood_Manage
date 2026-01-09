@@ -27,11 +27,14 @@ public class AuthController {
     @PostMapping("/login")
     public Result login(@RequestBody LoginRequest loginRequest) {
         try {
-            String token = authService.login(loginRequest.getUsername(), loginRequest.getPassword());
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("message", "登录成功");
-            return Result.success(response);
+            Map<String, Object> loginResult = authService.loginWithUserInfo(
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword()
+            );
+
+            loginResult.put("message", "登录成功");
+
+            return Result.success(loginResult);
         } catch (Exception e) {
             return Result.error("用户名或密码错误");
         }

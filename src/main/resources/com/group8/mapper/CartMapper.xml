@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.group8.mapper.CartMapper">
+
+    <select id="selectByUserId" resultType="com.group8.entity.CartItem">
+        SELECT
+            c.id,
+            c.product_id as productId,
+            c.quantity,
+            c.note,
+            p.name as productName,
+            p.price,
+            p.image,
+            p.unit
+        FROM cart c
+                 LEFT JOIN products p ON c.product_id = p.productId
+        WHERE c.user_id = #{userId}
+    </select>
+</mapper>

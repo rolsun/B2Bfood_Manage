@@ -43,7 +43,11 @@ public interface ProductMapper {
      */
     List<Product> getAllProducts(@Param("queryParam") BuyerQueryParam queryParam);
 
-
+    /**
+     * 根据ID查询商品信息
+     */
+    @Select("SELECT * FROM products WHERE productId = #{productId}")
+    Product selectById(@Param("productId") Long productId);
 
     /**
      * 获取商品分类列表
