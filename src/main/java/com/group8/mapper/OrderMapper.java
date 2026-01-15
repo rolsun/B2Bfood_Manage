@@ -61,6 +61,7 @@ public interface OrderMapper {
     int countOrdersBySupplierAndStatus(@Param("supplierId") Long supplierId,
                                        @Param("status") Integer status);
 
-
-
+//获取订单表中的supplierId
+    @Select("SELECT supplier_id FROM orders WHERE order_sn = #{orderNumber}")
+    int selectSupplierIdByOrderSn(String orderNumber);
 }

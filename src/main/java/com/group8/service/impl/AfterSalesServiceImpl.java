@@ -4,6 +4,7 @@ import com.group8.entity.AfterSales;
 import com.group8.entity.Result;
 import com.group8.entity.User;
 import com.group8.mapper.AfterSalesMapper;
+import com.group8.mapper.OrderMapper;
 import com.group8.service.AfterSalesService;
 import com.group8.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,9 @@ public class AfterSalesServiceImpl implements AfterSalesService {
 
     @Autowired
     private AfterSalesMapper afterSalesMapper;
+
+    @Autowired
+    private OrderMapper orderMapper;
 
     @Autowired
     private UserService userService;
@@ -73,8 +77,16 @@ public class AfterSalesServiceImpl implements AfterSalesService {
                 return Result.error("售后申请不存在");
             }
 
-            // 检查是否是自己的订单
+            /*// 检查是否是自己的订单
             if (!user.getUserName().equals(afterSales.getComplainedSupplier())) {
+                return Result.error("无权处理此售后申请");
+            }*/
+
+            //检查是否是自己的订单
+            String orderNumber = afterSales.getComplainedOrder();//获取售后表中该条售后对应的订单号
+            int supplierId = orderMapper.selectSupplierIdByOrderSn(orderNumber);//获取订单表中order_sn = orderNumber的订单下的supplierId
+            //如果supplierId不等于当前登录的用户的userId,则返回"无权处理此售后申请"
+            if (supplierId != user.getUserId()){
                 return Result.error("无权处理此售后申请");
             }
 
@@ -168,7 +180,7 @@ public class AfterSalesServiceImpl implements AfterSalesService {
     }
 
     @Override
-    public Result getPendingAfterSalesForSupplier(String supplierId) {
+    public Result getPendingAfterSalesForSupplier(Long supplierId) {  // 修改参数类型为Long
         try {
             List<AfterSales> afterSalesList = afterSalesMapper.selectBySupplierId(supplierId);
             return Result.success(afterSalesList);
@@ -176,6 +188,8 @@ public class AfterSalesServiceImpl implements AfterSalesService {
             return Result.error("获取供应商待处理售后申请失败: " + e.getMessage());
         }
     }
+
+
 
     @Override
     public Result getAfterSalesForBuyer(Long buyerId) {

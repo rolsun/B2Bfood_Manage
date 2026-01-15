@@ -90,7 +90,7 @@ public class AfterSalesController {
     @GetMapping("/pending")
     @PreAuthorize("hasRole('SUPPLIER')")
     public Result getPendingAfterSalesForSupplier(Authentication authentication) {
-        String supplierId = getCurrentUsername(authentication);
+        Long supplierId = getCurrentUserId(authentication);
         return afterSalesService.getPendingAfterSalesForSupplier(supplierId);
     }
 

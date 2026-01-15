@@ -11,7 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -94,9 +97,21 @@ public class ProductController {
     @PreAuthorize("hasRole('PURCHASER')")
     public Result getAllProducts(BuyerQueryParam queryParam) {
         log.info("获取商品列表：{}", queryParam);
+
+        // 获取商品列表
         List<Product> products = productService.getAllProducts(queryParam);
-        return Result.success(products);
+
+        // 获取总记录数
+        int total = productService.countAllProducts(queryParam);
+
+        // 构建响应数据
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("total", total);
+        responseData.put("list", products);
+
+        return Result.success(responseData);
     }
+
 
     //私有方法
     private Long getCurrentUserId(Authentication authentication) {

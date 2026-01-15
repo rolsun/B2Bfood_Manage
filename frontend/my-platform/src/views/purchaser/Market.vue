@@ -1,88 +1,93 @@
 <template>
   <div class="market-container">
-    <el-card shadow="never">
-      <template #header>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 20px; font-weight: bold; color: #409EFF;">Rolsun 食品采购市场</span>
-          <el-button type="primary" icon="Refresh" @click="fetchData">刷新食材列表</el-button>
+    <el-card shadow="never" class="filter-bar">
+      <div class="flex-between">
+        <h2>发现优质食材</h2>
+        <div class="search-box">
+          <el-input v-model="query.keyword" placeholder="搜索食材名称..." @keyup.enter="fetchData" style="width: 320px;">
+            <template #append><el-button icon="Search" @click="fetchData" /></template>
+          </el-input>
+          <el-badge :value="cartNum" class="m-l-20">
+            <el-button type="warning" icon="ShoppingCart" circle @click="$router.push('/cart')" />
+          </el-badge>
         </div>
-      </template>
-
-      <el-table :data="productList" v-loading="loading" stripe border>
-        <el-table-column prop="productId" label="ID" width="70" align="center" />
-        <el-table-column label="食材图" width="100" align="center">
-          <template #default="scope">
-            <el-image :src="getImgUrl(scope.row.image)" style="width: 50px; height: 50px; border-radius: 4px;" fit="cover" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="name" label="食材名称" />
-        <el-table-column prop="price" label="单价" width="120">
-          <template #default="scope">￥{{ scope.row.price }} / {{ scope.row.unit }}</template>
-        </el-table-column>
-        <el-table-column prop="stock" label="库存" width="100" align="center" />
-        <el-table-column label="操作" width="120" fixed="right">
-          <template #default="scope">
-            <el-button type="success" size="small" @click="addToCart(scope.row)">加入购物车</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      </div>
     </el-card>
+
+    <div class="product-grid" v-loading="loading">
+      <el-row :gutter="20">
+        <el-col :span="6" v-for="p in productList" :key="p.productId">
+          <div class="product-item">
+            <div class="image-box">
+              <el-image :src="p.image" fit="cover" />
+              <div class="price-tag">￥{{ p.price }}</div>
+            </div>
+            <div class="info-box">
+              <div class="name">{{ p.name }}</div>
+              <div class="meta">单位: {{ p.unit }} | 库存: {{ p.stock }}</div>
+              <div class="actions">
+                <el-input-number v-model="p.buyNum" :min="1" size="small" />
+                <el-button type="primary" size="small" circle icon="Plus" @click="addCart(p)" />
+              </div>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+
+    <div class="pagination-wrapper">
+      <el-pagination v-model:current-page="query.page" :total="total" background layout="prev, pager, next" @current-change="fetchData" />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import request from '../../utils/request';
-import { ElMessage } from 'element-plus';
+import { ElNotification } from 'element-plus';
 
-const productList = ref([]);
 const loading = ref(false);
-
-const getImgUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  return `http://127.0.0.1:8080/${url}`;
-};
+const productList = ref([]);
+const total = ref(0);
+const cartNum = ref(0);
+const query = reactive({ page: 1, limit: 12, keyword: '' });
 
 const fetchData = async () => {
   loading.value = true;
-  try {
-    // 【关键修复】：请求时必须携带 page 和 limit 参数，防止后端 SQL 报错
-    const res = await request.get('/products', {
-      params: {
-        page: 1,      // 默认第一页
-        limit: 20,    // 默认每页20条
-        keyword: '',  // 搜索词为空
-        categoryId: null // 类目为空
-      }
-    });
-
-    console.log("后端返回原始数据:", res);
-
-    // 适配你的 {"code":1, "data": [...]} 结构
-    if (res.code === 1) {
-      // 兼容处理：如果后端返回的是分页对象 {list: [], total: 10}
-      if (res.data.list) {
-        productList.value = res.data.list;
-      } else {
-        // 如果后端直接返回的是数组
-        productList.value = res.data;
-      }
-    }
-  } catch (err) {
-    console.error("请求过程发生错误:", err);
-  } finally {
-    loading.value = false;
-  }
+  const res = await request.get('/products', { params: query });
+  // 保持你调通的分页逻辑
+  productList.value = (res.data.list || res.data).map(i => ({ ...i, buyNum: 1 }));
+  total.value = res.data.total || productList.value.length;
+  loading.value = false;
 };
 
-const addToCart = async (item) => {
-  await request.post('/orders/cart/add', {
-    productId: item.productId,
-    quantity: 1
-  });
-  ElMessage.success(`[${item.name}] 已加入清单`);
+const addCart = async (p) => {
+  await request.post('/orders/cart/add', { productId: p.productId, quantity: p.buyNum });
+  ElNotification({ title: '添加成功', message: `${p.name} 已入清单`, type: 'success' });
+  refreshCart();
 };
 
-onMounted(fetchData);
+const refreshCart = async () => {
+  const res = await request.get('/orders/cart');
+  cartNum.value = res.data?.length || 0;
+};
+
+onMounted(() => { fetchData(); refreshCart(); });
 </script>
+
+<style scoped>
+.filter-bar { margin-bottom: 25px; border-radius: 16px !important; }
+.product-item { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #eef2f7; transition: 0.3s; margin-bottom: 20px; }
+.product-item:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+.image-box { height: 180px; position: relative; overflow: hidden; }
+.image-box .el-image { width: 100%; height: 100%; transition: 0.5s; }
+.product-item:hover .el-image { transform: scale(1.1); }
+.price-tag { position: absolute; top: 12px; right: 12px; background: #ef4444; color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: bold; font-size: 14px; }
+.info-box { padding: 15px; }
+.name { font-weight: 700; font-size: 16px; color: #1e293b; margin-bottom: 5px; }
+.meta { font-size: 12px; color: #94a3b8; margin-bottom: 15px; }
+.actions { display: flex; justify-content: space-between; align-items: center; }
+.pagination-wrapper { display: flex; justify-content: center; margin-top: 30px; }
+.m-l-20 { margin-left: 20px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+</style>

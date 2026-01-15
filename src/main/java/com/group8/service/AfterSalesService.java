@@ -28,7 +28,7 @@ public interface AfterSalesService {
     /**
      * 获取供应商待处理的售后申请列表
      */
-    Result getPendingAfterSalesForSupplier(String supplierId);
+    Result getPendingAfterSalesForSupplier(Long supplierId);
     
     /**
      * 获取采购商提交的售后申请列表

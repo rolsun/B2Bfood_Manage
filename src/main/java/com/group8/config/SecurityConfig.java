@@ -24,7 +24,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. 必须配置：允许跨域并禁用 CSRF
+                // 1. 配置：允许跨域并禁用 CSRF
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
 
@@ -34,10 +34,17 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(authz -> authz
+
+                        // ================= Swagger 放行（新增） =================
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
                         // 3. 核心修复：放行所有 OPTIONS 预检请求，解决前端“接口连接失败”
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // --- 以下是你原有的权限配置，保持不变 ---
+
                         .requestMatchers("/categories/create").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/categories").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/categories").hasRole("ADMIN")
@@ -66,7 +73,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/orders/cart/*").hasRole("PURCHASER")
 
                         .requestMatchers(HttpMethod.GET, "/wallet/info").hasAnyRole("PURCHASER", "SUPPLIER")
-                        .requestMatchers(HttpMethod.POST, "/wallet/recharge").hasRole("PURCHASER")
+                        .requestMatchers(HttpMethod.POST, "/wallet/recharge").hasAnyRole("PURCHASER", "SUPPLIER")
                         .requestMatchers(HttpMethod.POST, "/wallet/pay").hasRole("PURCHASER")
                         .requestMatchers(HttpMethod.GET, "/wallet/transactions").hasAnyRole("PURCHASER", "SUPPLIER")
                         .requestMatchers(HttpMethod.POST, "/wallet/withdraw").hasAnyRole("PURCHASER", "SUPPLIER")

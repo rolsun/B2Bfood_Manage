@@ -40,9 +40,7 @@ public interface UserMapper {
     @Select("SELECT * FROM users WHERE userId = #{userId}")
     User selectById(@Param("userId") Long userId);
 
-    @Update("UPDATE users SET username = #{request.userName}, phone = #{request.phone}, " +
-            "email = #{request.email}, address = #{request.address} " +
-            "WHERE userId = #{userId}")
+
     int updateUserInfo(@Param("userId") Long userId,
                        @Param("request") UserInfoUpdateRequest request);
 

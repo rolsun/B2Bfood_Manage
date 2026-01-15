@@ -18,7 +18,12 @@ const routes = [
       { path: 'supplier-products', component: () => import('../views/supplier/Products.vue') },
       { path: 'supplier-orders', component: () => import('../views/supplier/Orders.vue') },
       { path: 'wallet', component: () => import('../views/common/Wallet.vue') },
-      { path: 'cart', component: () => import('../views/purchaser/Cart.vue') }
+      { path: 'cart', component: () => import('../views/purchaser/Cart.vue') },
+      { path: 'after-sales', component: () => import('../views/common/AfterSales.vue') },
+      { path: 'user-manage', component: () => import('../views/admin/Users.vue') },
+      { path: 'category-manage', component: () => import('../views/admin/Categories.vue') },
+      { path: 'profile', component: () => import('../views/common/Profile.vue') },
+      { path: '/register', name: 'Register', component: () => import('../views/Register.vue') }
     ]
   },
   // 捕获所有不存在的路由，重定向到首页
@@ -34,21 +39,17 @@ const router = createRouter({
 });
 
 /**
- * 核心修复：路由守卫逻辑
+ * 路由守卫逻辑
  */
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
+  const whitelist = ['/login', '/register']; // 白名单列表
   
-  // 1. 如果要去登录页，直接放行
-  if (to.path === '/login') {
+  if (whitelist.includes(to.path)) {
     next();
-  } 
-  // 2. 如果没有 Token，且访问的不是登录页，强制跳转到 /login
-  else if (!token) {
+  } else if (!token) {
     next('/login');
-  } 
-  // 3. 有 Token，正常放行
-  else {
+  } else {
     next();
   }
 });

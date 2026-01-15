@@ -6,11 +6,11 @@
 
     <!--供应商创建商品-->
     <insert id="add" parameterType="com.group8.entity.Product">
-        insert into products(name,categoryId,unit,price,description,stock,image,supplier_id)
-            values(#{name},#{categoryId},#{unit},#{price},#{description},#{stock},#{image},#{supplierId})
-            </insert>
+        INSERT INTO products(name,categoryId,unit,price,description,stock,image,supplier_id)
+        VALUES(#{name},#{categoryId},#{unit},#{price},#{description},#{stock},#{image},#{supplierId})
+    </insert>
 
-    <!--供应商更新商品-->
+    <!--供应商更新商品（包含图片）-->
     <update id="update" parameterType="com.group8.entity.Product">
         UPDATE products
         SET name = #{product.name},
@@ -23,9 +23,29 @@
         WHERE productId = #{productId}
     </update>
 
+    <!--仅更新商品图片-->
+    <update id="updateProductImage">
+        UPDATE products
+        SET image = #{image}
+        WHERE productId = #{productId}
+    </update>
+
     <!--供应商获取自有商品列表-->
     <select id="selectBySupplierId" resultType="com.group8.entity.Product">
             select * from products where supplier_id=#{userId}
+    </select>
+
+    <!-- 添加统计商品总数查询 -->
+    <select id="countAllProducts" resultType="int">
+        SELECT COUNT(*) FROM products
+        <where>
+            <if test="queryParam.keyword != null and queryParam.keyword != ''">
+                name like concat('%', #{queryParam.keyword}, '%')
+            </if>
+            <if test="queryParam.categoryId != null">
+                and categoryId = #{queryParam.categoryId}
+            </if>
+        </where>
     </select>
 
 
@@ -40,7 +60,7 @@
                 and categoryId = #{queryParam.categoryId}
             </if>
         </where>
-        limit #{queryParam.page},#{queryParam.limit}
+        limit ${(queryParam.page - 1) * queryParam.limit}, #{queryParam.limit}
     </select>
 
     <!-- 获取某类别下的所有商品信息-->

@@ -33,6 +33,27 @@
         LIMIT #{page}, #{limit}
     </select>
 
+    <!-- 优化更新语句，避免更新空值 -->
+    <update id="updateUserInfo">
+        UPDATE users
+        <set>
+            <if test="request.userName != null and request.userName != ''">
+                username = #{request.userName},
+            </if>
+            <if test="request.phone != null">
+                phone = #{request.phone},
+            </if>
+            <if test="request.email != null">
+                email = #{request.email},
+            </if>
+            <if test="request.address != null">
+                address = #{request.address},
+            </if>
+        </set>
+        WHERE userId = #{userId}
+    </update>
+
+
     <!-- 统计用户数量 -->
     <select id="countUsers" parameterType="map" resultType="int">
         SELECT COUNT(*) FROM users

@@ -54,12 +54,23 @@
     </update>
 
     <!-- 根据供应商ID查询待处理的售后申请 -->
-    <select id="selectBySupplierId" parameterType="java.lang.String" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM after_sales_table
-        WHERE complained_supplier = #{supplierId,jdbcType=VARCHAR}
-        AND status = 1
+    <select id="selectBySupplierId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        ast.id,
+        ast.application_content,
+        ast.complained_supplier,
+        ast.complained_order,
+        ast.status,
+        ast.created_time,
+        ast.after_sales_type
+        FROM after_sales_table ast  <!-- 修改为实际表名 -->
+        INNER JOIN orders o ON ast.complained_order = o.order_sn
+        WHERE o.supplier_id = #{supplierId,jdbcType=BIGINT}
+        AND ast.status = 1
     </select>
+
+
+
 
     <!-- 删除记录 -->
     <delete id="deleteById" parameterType="java.lang.Long">

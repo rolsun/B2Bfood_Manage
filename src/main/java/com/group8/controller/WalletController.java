@@ -37,7 +37,7 @@ public class WalletController {
      * 权限: 仅限采购商
      */
     @PostMapping("/recharge")
-    @PreAuthorize("hasRole('PURCHASER')")
+    @PreAuthorize("hasAnyRole('PURCHASER', 'SUPPLIER')")
     public Result recharge(@Valid @RequestBody WalletRechargeRequest request, Authentication authentication) {
         log.info("钱包充值，请求：{}", request);
         Long userId = getCurrentUserId(authentication);

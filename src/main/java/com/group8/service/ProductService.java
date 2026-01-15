@@ -35,6 +35,10 @@ public interface ProductService {
      */
     void delete(Integer productId);
 
+    // 添加统计商品总数方法
+    int countAllProducts(BuyerQueryParam queryParam);
+
+
     /**
      * 采购商获取所有商品列表,分页查询,可根据keyword模糊搜索关键词,可按商品类目ID筛选
      */

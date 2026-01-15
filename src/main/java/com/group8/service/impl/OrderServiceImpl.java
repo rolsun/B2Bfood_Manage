@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +24,10 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
-    
+
     @Autowired
     private OrderMapper orderMapper;
-    
+
     @Autowired
     private OrderItemMapper orderItemMapper;
 
@@ -42,18 +43,18 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private WalletService walletService;
 
-    
+
     @Override
     @Transactional
     public OrderCreateResponse createOrder(OrderCreateRequest request, Long buyerId) {
         log.info("创建订单：{}", request);
-        
+
         // 1. 校验库存和价格
         validateInventoryAndPrice(request.getItems());
-        
+
         // 2. 计算总金额
         BigDecimal totalAmount = calculateTotalAmount(request.getItems());
-        
+
         // 3. 创建订单
         Order order = new Order();
         order.setOrderSn(generateOrderSn());
@@ -66,9 +67,9 @@ public class OrderServiceImpl implements OrderService {
         order.setBuyerNote(request.getBuyerNote());
         order.setCreateTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
-        
+
         orderMapper.insert(order);
-        
+
         // 4. 创建订单项
         for (OrderItemRequest itemRequest : request.getItems()) {
             OrderItem item = new OrderItem();
@@ -82,22 +83,30 @@ public class OrderServiceImpl implements OrderService {
             item.setCreateTime(LocalDateTime.now());
             orderItemMapper.insert(item);
         }
-        
-        // 5. 返回结果
+
+        // 5. 返回结果 - 为了兼容旧代码，这里仍然返回单订单格式
         OrderCreateResponse response = new OrderCreateResponse();
-        response.setOrderId(order.getId());
-        response.setOrderSn(order.getOrderSn());
-        response.setTotalAmount(order.getTotalAmount().doubleValue());
-        response.setOrderStatus(order.getOrderStatus());
-        
+        List<OrderCreateResponse.OrderInfo> orderInfos = new ArrayList<>();
+        OrderCreateResponse.OrderInfo orderInfo = new OrderCreateResponse.OrderInfo(
+                order.getId(),
+                order.getOrderSn(),
+                order.getTotalAmount().doubleValue(),
+                order.getOrderStatus(),
+                order.getSupplierId(),
+                order.getCreateTime()
+        );
+        orderInfos.add(orderInfo);
+        response.setOrders(orderInfos);
+        response.setTotalOrderCount(1);
+
         log.info("订单创建成功：{}", response);
         return response;
     }
-    
+
     @Override
     public Result getOrders(OrderQueryRequest queryRequest, Long userId, Integer userType) {
         log.info("获取订单列表，用户ID：{}，用户类型：{}", userId, userType);
-        
+
         Map<String, Object> params = new HashMap<>();
         params.put("userId", userId);
         params.put("userType", userType);
@@ -107,15 +116,15 @@ public class OrderServiceImpl implements OrderService {
         params.put("status", queryRequest.getStatus());
         params.put("startTime", queryRequest.getStartTime());
         params.put("endTime", queryRequest.getEndTime());
-        
+
         List<Order> orders = orderMapper.selectOrders(params);
         int total = orderMapper.countOrders(params);
-        
+
         // 构建分页结果
         Map<String, Object> result = new HashMap<>();
         result.put("total", total);
         result.put("list", orders);
-        
+
         return Result.success(result);
     }
 
@@ -141,51 +150,51 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Result updateOrder(Long orderId, OrderUpdateRequest request, Long buyerId) {
         log.info("更新订单，订单ID：{}，用户ID：{}", orderId, buyerId);
-        
+
         Order order = orderMapper.selectById(orderId);
         if (order == null) {
             return Result.error("订单不存在");
         }
-        
+
         if (!order.getBuyerId().equals(buyerId)) {
             return Result.error("无权修改此订单");
         }
-        
+
         if (order.getOrderStatus() != 1) { // 只能修改待支付状态的订单
             return Result.error("订单状态不允许修改");
         }
-        
+
         orderMapper.updateOrder(orderId, request.getDeliveryAddressId(), request.getBuyerNote());
-        
+
         Order updatedOrder = orderMapper.selectById(orderId);
         return Result.success(updatedOrder);
     }
-    
+
     @Override
     public Result cancelOrder(Long orderId, OrderCancelRequest request, Long buyerId) {
         log.info("取消订单，订单ID：{}，用户ID：{}", orderId, buyerId);
-        
+
         Order order = orderMapper.selectById(orderId);
         if (order == null) {
             return Result.error("订单不存在");
         }
-        
+
         if (!order.getBuyerId().equals(buyerId)) {
             return Result.error("无权取消此订单");
         }
-        
+
         if (order.getOrderStatus() != 1) { // 只能取消待支付状态的订单
             return Result.error("订单状态不允许取消");
         }
-        
+
         orderMapper.cancelOrder(orderId, request.getCancelReason());
-        
+
         Map<String, Object> result = new HashMap<>();
         result.put("orderId", orderId);
         result.put("orderSn", order.getOrderSn());
         result.put("orderStatus", 5); // 已取消
         result.put("updateTime", LocalDateTime.now().toString());
-        
+
         return Result.success(result);
     }
 
@@ -227,11 +236,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Result getPendingOrdersForSupplier(OrderQueryRequest queryRequest, Long supplierId) {
-        log.info("供应商获取待处理订单，供应商ID：{}", supplierId);
+        log.info("供应商获取订单，供应商ID：{}，状态：{}", supplierId, queryRequest.getStatus());
+
+        // 如果未指定状态，默认查询待发货状态(2)
+        Integer status = queryRequest.getStatus() != null ? queryRequest.getStatus() : 2;
 
         int page = (queryRequest.getPage() - 1) * queryRequest.getLimit();
-        List<Order> orders = orderMapper.selectOrdersBySupplierAndStatus(supplierId, 2, page, queryRequest.getLimit());
-        int total = orderMapper.countOrdersBySupplierAndStatus(supplierId, 2);
+        List<Order> orders = orderMapper.selectOrdersBySupplierAndStatus(supplierId, status, page, queryRequest.getLimit());
+        int total = orderMapper.countOrdersBySupplierAndStatus(supplierId, status);
 
         // 构建分页结果
         Map<String, Object> result = new HashMap<>();
@@ -243,32 +255,33 @@ public class OrderServiceImpl implements OrderService {
 
 
 
+
     @Override
     public Result addShippingInfo(Long orderId, ShippingInfoRequest request, Long supplierId) {
         log.info("供应商上传配送信息，订单ID：{}，供应商ID：{}", orderId, supplierId);
-        
+
         Order order = orderMapper.selectById(orderId);
         if (order == null) {
             return Result.error("订单不存在");
         }
-        
+
         if (!order.getSupplierId().equals(supplierId)) {
             return Result.error("无权为该订单发货");
         }
-        
+
         if (order.getOrderStatus() != 2) { // 只能对待发货状态的订单发货
             return Result.error("订单状态不允许发货");
         }
-        
-        orderMapper.updateShippingInfo(orderId, request.getShippingCompany(), 
-                                     request.getTrackingNumber(), request.getEstimatedDeliveryTime());
-        
+
+        orderMapper.updateShippingInfo(orderId, request.getShippingCompany(),
+                request.getTrackingNumber(), request.getEstimatedDeliveryTime());
+
         Map<String, Object> result = new HashMap<>();
         result.put("orderId", orderId);
         result.put("orderSn", order.getOrderSn());
         result.put("orderStatus", 3); // 已发货
         result.put("updateTime", LocalDateTime.now().toString());
-        
+
         return Result.success(result);
     }
 
@@ -388,35 +401,50 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // 构建订单创建请求
-        OrderCreateRequest orderRequest = new OrderCreateRequest();
-        orderRequest.setDeliveryAddressId(request.getDeliveryAddressId());
-        orderRequest.setPaymentMethod(request.getPaymentMethod()); // 默认为在线支付
-        orderRequest.setBuyerNote(request.getBuyerNote());
+        // 按供应商分组购物车商品 - 修正类型
+        Map<Long, List<CartItem>> groupedBySupplier = cartItems.stream()
+                .collect(Collectors.groupingBy(cartItem -> {
+                    Product product = getProductById(cartItem.getProductId());
+                    return product.getSupplierId(); // supplierId 是 Long 类型
+                }));
+        // 为每个供应商创建订单
+        List<OrderCreateResponse.OrderInfo> orderInfos = new ArrayList<>();
+        for (Map.Entry<Long, List<CartItem>> entry : groupedBySupplier.entrySet()) {
+            Long supplierId = entry.getKey();
+            List<CartItem> supplierItems = entry.getValue();
 
-        // 将购物车商品转换为订单项
-        List<OrderItemRequest> orderItems = new java.util.ArrayList<>();
-        for (CartItem cartItem : cartItems) {
-            OrderItemRequest itemRequest = new OrderItemRequest();
-            itemRequest.setProductId(cartItem.getProductId());
-            itemRequest.setQuantity(cartItem.getQuantity());
-            itemRequest.setNote(cartItem.getNote());
-            orderItems.add(itemRequest);
+            // 构建针对该供应商的订单请求
+            OrderCreateRequest orderRequest = new OrderCreateRequest();
+            orderRequest.setDeliveryAddressId(request.getDeliveryAddressId());
+            orderRequest.setPaymentMethod(request.getPaymentMethod());
+            orderRequest.setBuyerNote(request.getBuyerNote());
+
+            // 转换供应商商品为订单项
+            List<OrderItemRequest> orderItems = new ArrayList<>();
+            for (CartItem cartItem : supplierItems) {
+                OrderItemRequest itemRequest = new OrderItemRequest();
+                itemRequest.setProductId(cartItem.getProductId());
+                itemRequest.setQuantity(cartItem.getQuantity());
+                itemRequest.setNote(cartItem.getNote());
+                orderItems.add(itemRequest);
+            }
+            orderRequest.setItems(orderItems);
+
+            // 创建该供应商的订单
+            OrderCreateResponse.OrderInfo orderInfo = createOrderForSupplier(orderRequest, buyerId, supplierId);
+            orderInfos.add(orderInfo);
         }
-        orderRequest.setItems(orderItems);
 
-        // 创建订单
-        OrderCreateResponse response = createOrder(orderRequest, buyerId);
+        // 构建多订单响应
+        OrderCreateResponse response = new OrderCreateResponse();
+        response.setOrders(orderInfos);
+        response.setTotalOrderCount(orderInfos.size());
 
-        // 如果订单创建成功，清空购物车
-        if (response != null) {
-            cartMapper.deleteByUserId(buyerId);
-            return Result.success(response);
-        } else {
-            return Result.error("订单创建失败");
-        }
+        // 清空购物车
+        cartMapper.deleteByUserId(buyerId);
+
+        return Result.success(response);
     }
-
 
 
 
@@ -468,22 +496,17 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("订单项不能为空");
         }
 
+        // 对于跨供应商订单，返回第一个商品的供应商ID
         Long firstProductId = items.get(0).getProductId();
         Product product = getProductById(firstProductId);
         if (product == null) {
             throw new RuntimeException("商品不存在，ID：" + firstProductId);
         }
 
-        // 如果订单中有多个商品，需要校验是否属于同一供应商
-        for (OrderItemRequest item : items) {
-            Product currentProduct = getProductById(item.getProductId());
-            if (currentProduct == null || !currentProduct.getSupplierId().equals(product.getSupplierId())) {
-                throw new RuntimeException("订单中包含不同供应商的商品，不支持跨供应商下单");
-            }
-        }
-
+        // 不再抛出跨供应商异常，因为现在支持跨供应商下单
         return product.getSupplierId();
     }
+
 
 
     private BigDecimal getProductPrice(Long productId) {
@@ -509,5 +532,75 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    private OrderCreateResponse.OrderInfo createOrderForSupplier(OrderCreateRequest request,
+                                                                 Long buyerId, Long supplierId) {
+        log.info("为供应商 {} 创建订单", supplierId);
+
+        // 1. 校验库存和价格（仅针对当前供应商的商品）
+        validateInventoryAndPriceForSupplier(request.getItems());
+
+        // 2. 计算总金额
+        BigDecimal totalAmount = calculateTotalAmount(request.getItems());
+
+        // 3. 创建订单
+        Order order = new Order();
+        order.setOrderSn(generateOrderSn());
+        order.setBuyerId(buyerId);
+        order.setSupplierId(Long.valueOf(supplierId)); // 设置特定供应商
+        order.setTotalAmount(totalAmount);
+        order.setOrderStatus(1); // 待支付
+        order.setPaymentMethod(request.getPaymentMethod());
+        order.setDeliveryAddressId(request.getDeliveryAddressId());
+        order.setBuyerNote(request.getBuyerNote());
+        order.setCreateTime(LocalDateTime.now());
+        order.setUpdateTime(LocalDateTime.now());
+
+        orderMapper.insert(order);
+
+        // 4. 创建订单项
+        for (OrderItemRequest itemRequest : request.getItems()) {
+            OrderItem item = new OrderItem();
+            item.setOrderId(order.getId());
+            item.setProductId(itemRequest.getProductId());
+            item.setQuantity(itemRequest.getQuantity());
+            BigDecimal price = getProductPrice(itemRequest.getProductId());
+            item.setPrice(price);
+            item.setTotalPrice(price.multiply(new BigDecimal(itemRequest.getQuantity())));
+            item.setNote(itemRequest.getNote());
+            item.setCreateTime(LocalDateTime.now());
+            orderItemMapper.insert(item);
+        }
+
+        // 5. 返回订单信息
+        return new OrderCreateResponse.OrderInfo(
+                order.getId(),
+                order.getOrderSn(),
+                order.getTotalAmount().doubleValue(),
+                order.getOrderStatus(),
+                order.getSupplierId(),
+                order.getCreateTime()
+        );
+    }
+
+
+    private void validateInventoryAndPriceForSupplier(List<OrderItemRequest> items) {
+        log.info("校验供应商商品库存和价格：{}", items);
+
+        for (OrderItemRequest item : items) {
+            Product product = getProductById(item.getProductId());
+            if (product == null) {
+                throw new RuntimeException("商品不存在，ID：" + item.getProductId());
+            }
+
+            // 校验库存
+            if (product.getStock() < item.getQuantity()) {
+                throw new RuntimeException("商品库存不足，商品ID：" + item.getProductId() +
+                        "，所需数量：" + item.getQuantity() +
+                        "，可用库存：" + product.getStock());
+            }
+        }
+
+        log.info("供应商商品库存和价格校验通过");
+    }
 
 }

@@ -27,7 +27,7 @@ public interface AfterSalesMapper {
     /**
      * 根据供应商ID查询待处理的售后申请
      */
-    List<AfterSales> selectBySupplierId(@Param("supplierId") String supplierId);
+    List<AfterSales> selectBySupplierId(@Param("supplierId") Long supplierId);
     
     /**
      * 删除售后申请（取消申请）
