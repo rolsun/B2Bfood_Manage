@@ -34,7 +34,7 @@ public class WalletController {
     
     /**
      * 钱包充值
-     * 权限: 仅限采购商
+     *
      */
     @PostMapping("/recharge")
     @PreAuthorize("hasAnyRole('PURCHASER', 'SUPPLIER')")

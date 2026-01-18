@@ -11,7 +11,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private String SECRET_KEY = "your-secret-key"; // 应该从配置文件读取
+    private String SECRET_KEY = "your-secret-key"; // 从配置文件读取
 
     public String generateToken(User user) {
         Claims claims = Jwts.claims().setSubject(user.getUserName());
@@ -22,9 +22,10 @@ public class JwtUtil {
         return Jwts.builder()
                 .setClaims(claims)
                 .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
-                .compact();
+                .compact();//compact()的作用是将JWT构建成字符串格式返回
     }
 
+    //从Jwt令牌中提取角色信息的 方法
     public String extractRole(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(SECRET_KEY)
