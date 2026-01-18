@@ -120,7 +120,7 @@ create table products
     price       decimal(10, 2) null,
     stock       int            null,
     description varchar(100)   null,
-    image       varchar(100)   null,
+    image       varchar(500)   null,
     supplier_id int            null,
     constraint fk_products_category
         foreign key (categoryId) references categories (id),
@@ -136,7 +136,7 @@ create table wallet_transactions
     id               bigint auto_increment
         primary key,
     user_id          bigint                              not null comment '用户ID',
-    transaction_type tinyint                             not null comment '交易类型: 1-充值, 2-支付, 3-提现',
+    transaction_type tinyint                             not null comment '交易类型: 1-充值, 2-用户支付, 3-售后退款,4-提现',
     amount           decimal(10, 2)                      not null comment '交易金额',
     before_balance   decimal(10, 2)                      not null comment '交易前余额',
     after_balance    decimal(10, 2)                      not null comment '交易后余额',

@@ -2,7 +2,7 @@ package com.group8.service;
 
 import com.group8.dto.*;
 import com.group8.entity.Result;
-import com.group8.entity.Wallet;
+import java.math.BigDecimal;
 
 public interface WalletService {
     
@@ -23,4 +23,10 @@ public interface WalletService {
     
     // 创建用户钱包
     void createWalletIfNotExists(Long userId);
+    
+    // 订单收入（供应商收到款项）
+    Result income(BigDecimal amount, Long userId, Long orderId, String description);
+    
+    // 退款给用户
+    Result refund(BigDecimal amount, Long userId, Long orderId, String description);
 }

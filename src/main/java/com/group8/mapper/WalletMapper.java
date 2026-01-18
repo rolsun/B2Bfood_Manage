@@ -29,4 +29,14 @@ public interface WalletMapper {
     
     @Update("UPDATE wallets SET balance = #{newBalance}, update_time = NOW() WHERE user_id = #{userId}")
     int updateBalance(@Param("userId") Long userId, @Param("newBalance") BigDecimal newBalance);
+    
+    // 新增方法：增加余额（用于订单收入等场景）
+    @Update("UPDATE wallets SET balance = balance + #{amount}, total_recharge = total_recharge + #{amount}, " +
+            "update_time = NOW() WHERE user_id = #{userId}")
+    int increaseBalance(@Param("userId") Long userId, @Param("amount") BigDecimal amount);
+    
+    // 新增方法：减少余额（用于退款等场景）
+    @Update("UPDATE wallets SET balance = balance - #{amount}, total_spent = total_spent - #{amount}, " +
+            "update_time = NOW() WHERE user_id = #{userId} AND balance >= #{amount}")
+    int decreaseBalance(@Param("userId") Long userId, @Param("amount") BigDecimal amount);
 }

@@ -20,6 +20,9 @@ public interface OrderMapper {
     @Select("SELECT * FROM orders WHERE id = #{orderId}")
     Order selectById(@Param("orderId") Long orderId);
     
+    @Select("SELECT * FROM orders WHERE order_sn = #{orderSn}")
+    Order selectByOrderSn(@Param("orderSn") String orderSn);
+    
     @Select("SELECT * FROM orders WHERE buyer_id = #{userId} OR supplier_id = #{userId}")
     List<Order> selectByUserId(@Param("userId") Long userId);
     

@@ -1,18 +1,23 @@
 package com.group8.service.impl;
 
 import com.group8.entity.AfterSales;
+import com.group8.entity.Order;
 import com.group8.entity.Result;
 import com.group8.entity.User;
 import com.group8.mapper.AfterSalesMapper;
 import com.group8.mapper.OrderMapper;
 import com.group8.service.AfterSalesService;
 import com.group8.service.UserService;
+import com.group8.service.WalletService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
+@Slf4j
 @Service
 @Transactional
 public class AfterSalesServiceImpl implements AfterSalesService {
@@ -25,6 +30,9 @@ public class AfterSalesServiceImpl implements AfterSalesService {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private WalletService walletService;
 
     @Override
     public Result submitAfterSales(AfterSales afterSales, String username) {
@@ -95,6 +103,19 @@ public class AfterSalesServiceImpl implements AfterSalesService {
                 return Result.error("该售后申请已处理，无法重复操作");
             }
 
+            // 查找原始订单以获取订单金额
+            Order order = orderMapper.selectByOrderSn(orderNumber);
+            if (order == null) {
+                return Result.error("关联的订单不存在");
+            }
+
+            // 根据售后类型处理退款
+            // 1-退货退款, 2-仅退款, 3-换货
+            if (afterSales.getAfterSalesType() == 1 || afterSales.getAfterSalesType() == 2) {
+                // 退货退款或仅退款：将订单金额退回到采购商钱包
+                refundOrderAmountToBuyer(order);
+            }
+
             // 更新状态为已处理
             int result = afterSalesMapper.updateStatus(id, 2);
             if (result > 0) {
@@ -104,6 +125,19 @@ public class AfterSalesServiceImpl implements AfterSalesService {
             }
         } catch (Exception e) {
             return Result.error("处理售后申请失败: " + e.getMessage());
+        }
+    }
+
+    // 更新方法：将订单金额退还给采购商
+    private void refundOrderAmountToBuyer(Order order) {
+        try {
+            // 向采购商钱包退还金额 - 这会记录为类型3（售后退款）
+            walletService.refund(order.getTotalAmount(), order.getBuyerId(), order.getId(), 
+                "售后退款 - 订单号: " + order.getOrderSn());
+            
+            log.info("订单金额 {} 已退还给采购商 {}", order.getTotalAmount(), order.getBuyerId());
+        } catch (Exception e) {
+            log.error("订单金额退还给采购商失败，订单ID: {}, 采购商ID: {}", order.getId(), order.getBuyerId(), e);
         }
     }
 

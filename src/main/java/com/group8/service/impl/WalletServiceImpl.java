@@ -103,7 +103,7 @@ public class WalletServiceImpl implements WalletService {
         // 记录交易
         WalletTransaction transaction = new WalletTransaction();
         transaction.setUserId(userId);
-        transaction.setTransactionType(2); // 支付
+        transaction.setTransactionType(2); // 用户支付
         transaction.setAmount(request.getAmount());
         transaction.setBeforeBalance(beforeBalance);
         transaction.setAfterBalance(afterBalance);
@@ -165,7 +165,7 @@ public class WalletServiceImpl implements WalletService {
         // 记录交易
         WalletTransaction transaction = new WalletTransaction();
         transaction.setUserId(userId);
-        transaction.setTransactionType(3); // 提现
+        transaction.setTransactionType(4); // 提现
         transaction.setAmount(request.getAmount());
         transaction.setBeforeBalance(beforeBalance);
         transaction.setAfterBalance(afterBalance);
@@ -193,5 +193,83 @@ public class WalletServiceImpl implements WalletService {
             walletMapper.insert(wallet);
             log.info("为用户 {} 创建初始钱包", userId);
         }
+    }
+    
+    @Override
+    @Transactional
+    public Result income(BigDecimal amount, Long userId, Long orderId, String description) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return Result.error("收入金额必须大于0");
+        }
+        
+        Wallet wallet = walletMapper.selectByUserId(userId);
+        if (wallet == null) {
+            createWalletIfNotExists(userId);
+            wallet = walletMapper.selectByUserId(userId);
+        }
+        
+        BigDecimal beforeBalance = wallet.getBalance();
+        BigDecimal afterBalance = beforeBalance.add(amount);
+        
+        // 增加余额
+        int result = walletMapper.increaseBalance(userId, amount);
+        if (result <= 0) {
+            return Result.error("收入操作失败");
+        }
+        
+        // 记录交易
+        WalletTransaction transaction = new WalletTransaction();
+        transaction.setUserId(userId);
+        transaction.setTransactionType(2); // 用户支付（供应商收到支付）
+        transaction.setAmount(amount);
+        transaction.setBeforeBalance(beforeBalance);
+        transaction.setAfterBalance(afterBalance);
+        transaction.setOrderId(orderId);
+        transaction.setDescription(description != null ? description : "订单收入");
+        transaction.setStatus(1); // 成功
+        transaction.setCreateTime(LocalDateTime.now());
+        transactionMapper.insert(transaction);
+        
+        log.info("用户 {} 收入成功，金额：{}，余额：{}", userId, amount, afterBalance);
+        return Result.success("收入成功");
+    }
+    
+    @Override
+    @Transactional
+    public Result refund(BigDecimal amount, Long userId, Long orderId, String description) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return Result.error("退款金额必须大于0");
+        }
+        
+        Wallet wallet = walletMapper.selectByUserId(userId);
+        if (wallet == null) {
+            createWalletIfNotExists(userId);
+            wallet = walletMapper.selectByUserId(userId);
+        }
+        
+        BigDecimal beforeBalance = wallet.getBalance();
+        BigDecimal afterBalance = beforeBalance.add(amount);
+        
+        // 退款实际上是增加余额
+        int result = walletMapper.increaseBalance(userId, amount);
+        if (result <= 0) {
+            return Result.error("退款操作失败");
+        }
+        
+        // 记录交易
+        WalletTransaction transaction = new WalletTransaction();
+        transaction.setUserId(userId);
+        transaction.setTransactionType(3); // 售后退款
+        transaction.setAmount(amount);
+        transaction.setBeforeBalance(beforeBalance);
+        transaction.setAfterBalance(afterBalance);
+        transaction.setOrderId(orderId);
+        transaction.setDescription(description != null ? description : "售后退款");
+        transaction.setStatus(1); // 成功
+        transaction.setCreateTime(LocalDateTime.now());
+        transactionMapper.insert(transaction);
+        
+        log.info("用户 {} 退款成功，金额：{}，余额：{}", userId, amount, afterBalance);
+        return Result.success("退款成功");
     }
 }

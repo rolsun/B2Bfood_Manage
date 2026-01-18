@@ -231,7 +231,23 @@ public class OrderServiceImpl implements OrderService {
         // 支付成功后更新订单状态为待发货
         orderMapper.updateStatus(orderId, 2); // 2-待发货
 
+        // 将订单金额转入供应商钱包
+        transferOrderAmountToSupplier(order);
+
         return Result.success("订单支付成功，等待供应商发货");
+    }
+
+    // 更新方法：将订单金额转入供应商钱包
+    private void transferOrderAmountToSupplier(Order order) {
+        try {
+            // 为供应商增加余额（订单收入）- 使用income方法，这会在内部记录为类型2（用户支付）
+            walletService.income(order.getTotalAmount(), order.getSupplierId(), order.getId(), 
+                "订单收入 - 订单号: " + order.getOrderSn());
+            
+            log.info("订单金额 {} 已转入供应商 {} 的钱包", order.getTotalAmount(), order.getSupplierId());
+        } catch (Exception e) {
+            log.error("订单金额转入供应商钱包失败，订单ID: {}, 供应商ID: {}", order.getId(), order.getSupplierId(), e);
+        }
     }
 
     @Override
@@ -397,7 +413,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             if (product.getStock() < cartItem.getQuantity()) {
-                return Result.error("商品库存不足，商品ID：" + cartItem.getProductId());
+                return Result.error("商品库存不足");
             }
         }
 

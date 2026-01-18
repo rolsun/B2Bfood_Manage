@@ -4,7 +4,7 @@
       <el-col :span="8">
         <el-card class="balance-card" shadow="hover">
           <div class="label">我的可用余额 (CNY)</div>
-          <!-- 核心修复：变量名由 wallet 改为 walletInfo 以匹配脚本 -->
+          <!-- 统一使用 walletInfo.balance -->
           <div class="amount">￥ {{ walletInfo.balance?.toFixed(2) || '0.00' }}</div>
           <div class="btn-group">
             <el-button type="primary" size="large" @click="showRecharge = true" style="width: 100%; border-radius: 8px; font-weight: bold;">
@@ -24,40 +24,47 @@
       </template>
 
       <el-table :data="transactions" stripe v-loading="loading">
-        <!-- 字段对齐：后端 createTime -->
+        <!-- 字段：createTime -->
         <el-table-column prop="createTime" label="交易时间" width="180" align="center">
           <template #default="scope">
             {{ formatTime(scope.row.createTime) }}
           </template>
         </el-table-column>
         
-        <el-table-column label="交易类型" width="120" align="center">
+        <el-table-column label="交易类型" width="130" align="center">
           <template #default="scope">
-            <!-- 逻辑修复：Number转换确保匹配，1-充值显示成功色，3-支出显示危险色 -->
-            <el-tag :type="isRecharge(scope.row.transactionType) ? 'success' : 'danger'" effect="light" round>
-              {{ isRecharge(scope.row.transactionType) ? '账户充值' : '订单支付' }}
+            <!-- 1-充值, 2-用户支付, 3-售后退款, 4-提现 -->
+            <el-tag :type="getTypeTag(scope.row.transactionType)" effect="light" round>
+              {{ getTypeText(scope.row.transactionType) }}
             </el-tag>
           </template>
         </el-table-column>
 
         <el-table-column label="变动金额" width="150" align="center">
           <template #default="scope">
-            <!-- 逻辑修复：强制正负号显示 -->
-            <b :style="{ color: isRecharge(scope.row.transactionType) ? '#67C23A' : '#F56C6C', fontSize: '16px' }">
-              {{ isRecharge(scope.row.transactionType) ? '+' : '-' }}{{ scope.row.amount }}
+            <!-- 核心逻辑：根据 userType 和 transactionType 自动计算正负号 -->
+            <b :style="{ color: getAmountColor(scope.row), fontSize: '16px' }">
+              {{ getAmountSign(scope.row) }}{{ scope.row.amount }}
             </b>
           </template>
         </el-table-column>
 
-        <!-- 字段对齐：后端 afterBalance -->
+        <!-- 字段：afterBalance -->
         <el-table-column prop="afterBalance" label="交易后余额" width="150" align="center">
           <template #default="scope">
             <span style="color: #606266; font-weight: 500;">￥{{ scope.row.afterBalance }}</span>
           </template>
         </el-table-column>
 
-        <!-- 字段对齐：后端 description -->
-        <el-table-column prop="description" label="备注" show-overflow-tooltip />
+        <!-- 字段：description 和 orderId -->
+        <el-table-column label="备注/关联单号" min-width="200">
+          <template #default="scope">
+            <div style="font-size: 13px;">
+              <div v-if="scope.row.orderId" style="color: #409EFF; margin-bottom: 2px;">单号: {{ scope.row.orderId }}</div>
+              <div style="color: #909399;">{{ scope.row.description || '钱包账务变动' }}</div>
+            </div>
+          </template>
+        </el-table-column>
       </el-table>
 
       <!-- 分页功能 -->
@@ -98,10 +105,11 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import request from '../../utils/request';
+import { useUserStore } from '../../store/user';
 import { ElMessage } from 'element-plus';
 import { Refresh } from '@element-plus/icons-vue';
 
-// 核心修复：变量名改为 walletInfo 匹配模板
+const userStore = useUserStore();
 const walletInfo = ref({});
 const transactions = ref([]);
 const loading = ref(false);
@@ -120,35 +128,69 @@ const rechargeForm = reactive({
   remark: '钱包充值' 
 });
 
-// 类型判断逻辑：1为充值，其他为支出
-const isRecharge = (type) => {
-  return Number(type) === 1;
-};
-
-// 格式化时间
+// 时间格式化
 const formatTime = (timeStr) => {
   if (!timeStr) return '';
   return timeStr.replace('T', ' ');
 };
 
+/**
+ * 【核心逻辑 1】：判断正负号符号
+ * 逻辑：
+ * - 1(充值): 均为 +
+ * - 2(支付): 采购商 - , 供应商 +
+ * - 3(退款): 采购商 + , 供应商 -
+ */
+const getAmountSign = (row) => {
+  const type = Number(row.transactionType);
+  const role = Number(userStore.userType);
+
+  if (type === 1) return '+'; // 充值永远是加
+  if (type === 4) return '-'; // 提现永远是减
+
+  if (role === 1) { // 采购商角色
+    return type === 3 ? '+' : '-'; // 售后退款是+, 支付是-
+  } else { // 供应商角色
+    return type === 2 ? '+' : '-'; // 用户支付(收入)是+, 售后退款(支出)是-
+  }
+};
+
+// 【核心逻辑 2】：判断颜色
+const getAmountColor = (row) => {
+  return getAmountSign(row) === '+' ? '#67C23A' : '#F56C6C';
+};
+
+// 翻译类型文字
+const getTypeText = (type) => {
+  const map = { 1: '资金充值', 2: '用户支付', 3: '售后退款', 4: '余额提现' };
+  return map[Number(type)] || '系统流水';
+};
+
+// 翻译标签颜色
+const getTypeTag = (type) => {
+  const t = Number(type);
+  if (t === 1 || (t === 2 && userStore.userType == 2) || (t === 3 && userStore.userType == 1)) {
+    return 'success'; // 收入项绿色
+  }
+  return 'danger'; // 支出项红色
+};
+
 const initData = async () => {
   loading.value = true;
   try {
-    // 1. 获取余额
     const resW = await request.get('/wallet/info');
     if (resW.code === 1) {
       walletInfo.value = resW.data;
     }
 
-    // 2. 获取交易记录
     const resT = await request.get('/wallet/transactions', { params: queryParams });
     if (resT.code === 1) {
-      // 适配分页结构
+      // 适配分页 list 结构
       transactions.value = resT.data.list || [];
       total.value = resT.data.total || 0;
     }
   } catch (error) {
-    console.error("加载失败", error);
+    console.error("加载钱包数据失败", error);
   } finally {
     loading.value = false;
   }
