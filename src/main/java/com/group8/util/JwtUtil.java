@@ -25,7 +25,7 @@ public class JwtUtil {
                 .compact();//compact()的作用是将JWT构建成字符串格式返回
     }
 
-    //从Jwt令牌中提取角色信息的 方法
+    //从Jwt令牌中提取角色信息的方法
     public String extractRole(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(SECRET_KEY)

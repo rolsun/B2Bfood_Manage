@@ -35,13 +35,14 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(authz -> authz
 
-                        // ================= Swagger 放行（新增） =================
+                        // ================= Swagger 放行 =================
                         .requestMatchers(
+                                "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // 3. 核心修复：放行所有 OPTIONS 预检请求，解决前端“接口连接失败”
+                        // 放行所有 OPTIONS 预检请求，解决前端“接口连接失败”
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
 
