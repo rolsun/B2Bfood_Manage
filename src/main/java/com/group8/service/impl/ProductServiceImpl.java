@@ -1,11 +1,13 @@
 package com.group8.service.impl;
 
 import com.group8.entity.BuyerQueryParam;
+import com.group8.entity.Category;
 import com.group8.entity.Product;
 import com.group8.mapper.ProductMapper;
 import com.group8.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,7 @@ public class ProductServiceImpl implements ProductService {
      * 供应商创建商品
      */
     @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
     public void add(Product product) {
         productMapper.add(product);
     }
@@ -43,6 +46,7 @@ public class ProductServiceImpl implements ProductService {
      * 供应商更新商品
      */
     @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
     public void update(Integer productId, Product product) {
         productMapper.update(productId, product);
     }
@@ -51,9 +55,15 @@ public class ProductServiceImpl implements ProductService {
      * 供应商删除商品
      */
     @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
     public void delete(Integer productId) {
         //调用mapper,执行sql
         productMapper.delete(productId);
+    }
+
+    @Override
+    public int countAllProducts(BuyerQueryParam queryParam) {
+        return productMapper.countAllProducts(queryParam);
     }
 
     /**
@@ -63,5 +73,48 @@ public class ProductServiceImpl implements ProductService {
     public List<Product> getAllProducts(BuyerQueryParam queryParam) {
         //调用mapper,传入参数,执行sql
         return productMapper.getAllProducts(queryParam);
+    }
+
+    /**
+     * 获取商品分类列表
+     */
+    @Override
+    public List<Category> getCategories() {
+        return productMapper.getCategories();
+    }
+
+    /**
+     * 获取某类别下的所有对应商品信息
+     */
+    @Override
+    public List<Product> getProductsByCategoryId(Integer categoryId) {
+        return productMapper.getProductsByCategoryId(categoryId);
+    }
+
+    /**
+     * 创建商品分类类目
+     */
+    @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
+    public void addCategory(Category category) {
+        productMapper.addCategory(category);
+    }
+
+    /**
+     * 更新商品分类类目
+     */
+    @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
+    public void updateCategory(Integer categoryId, Category category) {
+        productMapper.updateCategory(categoryId, category.getName());
+    }
+
+    /**
+     * 删除商品分类
+     */
+    @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
+    public void deleteCategory(Integer categoryId) {
+        productMapper.deleteCategory(categoryId);
     }
 }

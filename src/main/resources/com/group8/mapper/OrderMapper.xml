@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.group8.mapper.OrderMapper">
+
+    <!-- 订单结果映射 -->
+    <resultMap id="OrderWithItemsResultMap" type="com.group8.entity.Order">
+        <id property="id" column="id"/>
+        <result property="orderSn" column="order_sn"/>
+        <result property="buyerId" column="buyer_id"/>
+        <result property="supplierId" column="supplier_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="paymentMethod" column="payment_method"/>
+        <result property="deliveryAddressId" column="delivery_address_id"/>
+        <result property="buyerNote" column="buyer_note"/>
+        <result property="cancelReason" column="cancel_reason"/>
+        <result property="shippingCompany" column="shipping_company"/>
+        <result property="trackingNumber" column="tracking_number"/>
+        <result property="estimatedDeliveryTime" column="estimated_delivery_time"/>
+        <result property="actualDeliveryTime" column="actual_delivery_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <collection property="items" ofType="com.group8.entity.OrderItem">
+            <id property="id" column="item_id"/>
+            <result property="orderId" column="item_order_id"/>
+            <result property="productId" column="product_id"/>
+            <result property="quantity" column="quantity"/>
+            <result property="price" column="price"/>
+            <result property="totalPrice" column="total_price"/>
+            <result property="note" column="item_note"/>
+            <result property="createTime" column="item_create_time"/>
+        </collection>
+    </resultMap>
+
+    <!-- 用于订单列表查询的结果映射（不包含订单项） -->
+    <resultMap id="OrderListResultMap" type="com.group8.entity.Order">
+        <id property="id" column="id"/>
+        <result property="orderSn" column="order_sn"/>
+        <result property="buyerId" column="buyer_id"/>
+        <result property="supplierId" column="supplier_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="paymentMethod" column="payment_method"/>
+        <result property="deliveryAddressId" column="delivery_address_id"/>
+        <result property="buyerNote" column="buyer_note"/>
+        <result property="cancelReason" column="cancel_reason"/>
+        <result property="shippingCompany" column="shipping_company"/>
+        <result property="trackingNumber" column="tracking_number"/>
+        <result property="estimatedDeliveryTime" column="estimated_delivery_time"/>
+        <result property="actualDeliveryTime" column="actual_delivery_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+
+    <!-- 订单列表查询 -->
+    <select id="selectOrders" parameterType="map" resultMap="OrderWithItemsResultMap">
+        SELECT * FROM orders
+        <where>
+            <if test="userId != null and userType == 1">
+                AND buyer_id = #{userId}
+            </if>
+            <if test="userId != null and userType == 2">
+                AND supplier_id = #{userId}
+            </if>
+            <if test="orderSn != null and orderSn != ''">
+                AND order_sn LIKE CONCAT('%', #{orderSn}, '%')
+            </if>
+            <if test="status != null">
+                AND order_status = #{status}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND create_time >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND create_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{page}, #{limit}
+    </select>
+
+    <!-- 订单总数查询 -->
+    <select id="countOrders" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM orders
+        <where>
+            <if test="userId != null and userType == 1">
+                AND buyer_id = #{userId}
+            </if>
+            <if test="userId != null and userType == 2">
+                AND supplier_id = #{userId}
+            </if>
+            <if test="orderSn != null and orderSn != ''">
+                AND order_sn LIKE CONCAT('%', #{orderSn}, '%')
+            </if>
+            <if test="status != null">
+                AND order_status = #{status}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND create_time >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND create_time &lt;= #{endTime}
+            </if>
+        </where>
+    </select>
+
+    <!-- 修改 selectOrderWithItems 查询 -->
+    <select id="selectOrderWithItems" resultMap="OrderWithItemsResultMap">
+        SELECT
+            o.id, o.order_sn, o.buyer_id, o.supplier_id, o.total_amount, o.order_status,
+            o.payment_method, o.delivery_address_id, o.buyer_note, o.cancel_reason,
+            o.shipping_company, o.tracking_number, o.estimated_delivery_time, o.actual_delivery_time,
+            o.create_time, o.update_time,
+            oi.id as item_id, oi.order_id as item_order_id, oi.product_id, oi.quantity,
+            oi.price, oi.total_price, oi.note as item_note, oi.create_time as item_create_time
+        FROM orders o
+                 LEFT JOIN order_items oi ON o.id = oi.order_id
+        WHERE o.id = #{orderId}
+    </select>
+
+
+    <!-- 供应商获取待处理订单查询 -->
+    <select id="selectOrdersBySupplierAndStatus" parameterType="map" resultMap="OrderListResultMap">
+        SELECT * FROM orders
+        <where>
+            <if test="supplierId != null">
+                AND supplier_id = #{supplierId}
+            </if>
+            <if test="status != null">
+                AND order_status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{page}, #{limit}
+    </select>
+
+
+    <select id="countOrdersBySupplierAndStatus" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM orders
+        <where>
+            <if test="supplierId != null">
+                AND supplier_id = #{supplierId}
+            </if>
+            <if test="status != null">
+                AND order_status = #{status}
+            </if>
+        </where>
+    </select>
+
+
+
+
+
+
+</mapper>

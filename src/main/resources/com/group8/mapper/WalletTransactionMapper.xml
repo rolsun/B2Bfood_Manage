@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.group8.mapper.WalletTransactionMapper">
+
+    <!-- 钱包交易结果映射 -->
+    <resultMap id="WalletTransactionResultMap" type="com.group8.entity.WalletTransaction">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="transactionType" column="transaction_type"/>
+        <result property="amount" column="amount"/>
+        <result property="beforeBalance" column="before_balance"/>
+        <result property="afterBalance" column="after_balance"/>
+        <result property="orderId" column="order_id"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- 查询钱包交易记录 -->
+    <select id="selectTransactions" parameterType="map" resultMap="WalletTransactionResultMap">
+        SELECT * FROM wallet_transactions
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="transactionType != null">
+                AND transaction_type = #{transactionType}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND create_time >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND create_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{page}, #{limit}
+    </select>
+
+    <!-- 统计钱包交易记录数量 -->
+    <select id="countTransactions" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM wallet_transactions
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="transactionType != null">
+                AND transaction_type = #{transactionType}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND create_time >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND create_time &lt;= #{endTime}
+            </if>
+        </where>
+    </select>
+
+</mapper>
