@@ -16,6 +16,9 @@ public class User {
     private String email;      // 新增
     private String address;    // 新增
     private Integer status;    // 新增
+    //新增avatar字段
+    private String avatar;
+
 
     // 判断是否为管理员
     public boolean isAdmin() {

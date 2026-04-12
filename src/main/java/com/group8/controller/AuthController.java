@@ -7,15 +7,19 @@ import com.group8.entity.User;
 import com.group8.service.AuthService;
 import com.group8.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
 
     @Autowired
     private AuthService authService;
@@ -25,8 +29,10 @@ public class AuthController {
      * 用户登录
      */
     @PostMapping("/login")
-    public Result login(@RequestBody LoginRequest loginRequest) {
-        try {
+    public Result login(@RequestBody @Validated LoginRequest loginRequest) {
+
+        log.info("用户登录,用户名: {}", loginRequest.getUsername());
+
             Map<String, Object> loginResult = authService.loginWithUserInfo(
                     loginRequest.getUsername(),
                     loginRequest.getPassword()
@@ -35,16 +41,14 @@ public class AuthController {
             loginResult.put("message", "登录成功");
 
             return Result.success(loginResult);
-        } catch (Exception e) {
-            return Result.error("用户名或密码错误");
-        }
+
     }
 
     /**
      * 用户注册
      */
     @PostMapping("/register")
-    public Result register(@RequestBody RegisterRequest registerRequest) {
+    public Result register(@RequestBody @Validated RegisterRequest registerRequest) {
         try {
             User user = new User();
             user.setUserName(registerRequest.getUsername());

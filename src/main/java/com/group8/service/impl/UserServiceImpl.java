@@ -8,6 +8,8 @@ import com.group8.mapper.UserMapper;
 import com.group8.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +20,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class UserServiceImpl implements UserService {
+public class  UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
@@ -105,6 +107,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Caching(evict={
+            @CacheEvict(cacheNames = "userRoleCount", allEntries = true),
+            @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
+    })
     public Result deleteSupplier(Long supplierId, Long adminId) {
         // 验证管理员权限
         User admin = userMapper.selectById(adminId);
@@ -133,6 +139,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "userRoleCount", allEntries = true)
     public Result deleteBuyer(Long buyerId, Long adminId) {
         // 验证管理员权限
         User admin = userMapper.selectById(adminId);

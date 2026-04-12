@@ -8,12 +8,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class UserInfoUpdateRequest {
-    private String userName;
+    private String username;
     private String phone;
     private String email;
     private String address;
-
-    public String getuserName() {
-        return userName;
-    }
+    private String avatar;
 }

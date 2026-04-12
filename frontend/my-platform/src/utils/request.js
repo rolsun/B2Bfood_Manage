@@ -1,4 +1,4 @@
-import axios from 'axios';
+ import axios from 'axios';
 import { ElMessage, ElLoading } from 'element-plus';
 
 let loadingInstance = null;
@@ -32,15 +32,30 @@ service.interceptors.request.use(config => {
   return config;
 }, error => Promise.reject(error));
 
-service.interceptors.response.use(response => {
-  if (loadingInstance) loadingInstance.close();
-  return response.data; // 保持你已经调通的返回结构
-}, error => {
-  if (loadingInstance) loadingInstance.close();
-  // 保持你要求的：直接弹出后端给的错误消息（如：用户不存在）
-  const msg = error.response?.data?.message || error.response?.data?.msg || '服务连接异常';
-  ElMessage.error(msg);
-  return Promise.reject(error);
-});
+ service.interceptors.response.use(response => {
+     if (loadingInstance) loadingInstance.close();
+
+     // 检查后端返回的 code，如果是 0 表示业务失败（HTTP 200）
+     if (response.data && response.data.code === 0) {
+         const errorMsg = response.data.msg || '操作失败';
+         ElMessage.error(errorMsg);
+         return Promise.reject(new Error(errorMsg));
+     }
+
+     return response.data;
+ }, error => {
+     if (loadingInstance) loadingInstance.close();
+
+     // 处理 HTTP 错误状态码（如 500、401 等）
+     let msg = '服务连接异常';
+
+     if (error.response?.data) {
+         // 优先使用后端返回的错误信息
+         msg = error.response.data.msg || error.response.data.message || msg;
+     }
+
+     ElMessage.error(msg);
+     return Promise.reject(error);
+ });
 
 export default service;

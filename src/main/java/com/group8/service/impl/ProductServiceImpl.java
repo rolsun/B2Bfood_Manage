@@ -7,6 +7,7 @@ import com.group8.mapper.ProductMapper;
 import com.group8.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class ProductServiceImpl implements ProductService {
      * 供应商创建商品
      */
     @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
     public void add(Product product) {
         productMapper.add(product);
     }
@@ -44,6 +46,7 @@ public class ProductServiceImpl implements ProductService {
      * 供应商更新商品
      */
     @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
     public void update(Integer productId, Product product) {
         productMapper.update(productId, product);
     }
@@ -52,6 +55,7 @@ public class ProductServiceImpl implements ProductService {
      * 供应商删除商品
      */
     @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
     public void delete(Integer productId) {
         //调用mapper,执行sql
         productMapper.delete(productId);
@@ -91,6 +95,7 @@ public class ProductServiceImpl implements ProductService {
      * 创建商品分类类目
      */
     @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
     public void addCategory(Category category) {
         productMapper.addCategory(category);
     }
@@ -99,6 +104,7 @@ public class ProductServiceImpl implements ProductService {
      * 更新商品分类类目
      */
     @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
     public void updateCategory(Integer categoryId, Category category) {
         productMapper.updateCategory(categoryId, category.getName());
     }
@@ -107,6 +113,7 @@ public class ProductServiceImpl implements ProductService {
      * 删除商品分类
      */
     @Override
+    @CacheEvict(cacheNames = "productCategoryCount", allEntries = true)
     public void deleteCategory(Integer categoryId) {
         productMapper.deleteCategory(categoryId);
     }

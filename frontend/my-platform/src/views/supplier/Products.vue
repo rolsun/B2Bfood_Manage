@@ -65,8 +65,30 @@
         <el-form-item label="当前库存">
           <el-input-number v-model="form.stock" :min="0" style="width:100%" />
         </el-form-item>
-        <el-form-item label="图片URL">
-          <el-input v-model="form.image" placeholder="http://..." />
+        <el-form-item label="图片 URL">
+          <div class="upload-wrapper">
+            <el-input v-model="form.image" placeholder="http://..." />
+                    
+            <!-- 图片上传组件 -->
+            <image-upload 
+              dir="product" 
+              button-text="选择图片"
+              @success="handleImageUploadSuccess" 
+            />
+                    
+            <!-- 图片预览 -->
+            <el-image 
+              v-if="form.image" 
+              :src="formatImg(form.image)" 
+              style="width: 100px; height: 100px; margin-top: 10px; border-radius: 4px;" 
+              fit="cover"
+              :preview-src-list="[formatImg(form.image)]"
+            >
+              <template #error>
+                <div class="img-slot">图片加载失败</div>
+              </template>
+            </el-image>
+          </div>
         </el-form-item>
         <el-form-item label="食材描述">
           <el-input v-model="form.description" type="textarea" rows="2" />
@@ -86,6 +108,7 @@ import request from '../../utils/request';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useUserStore } from '../../store/user';
 import { Plus, Edit, Delete } from '@element-plus/icons-vue';
+import ImageUpload from '@/components/ImageUpload.vue';
 
 const userStore = useUserStore();
 const loading = ref(false);
@@ -110,6 +133,12 @@ const form = reactive({
 const formatImg = (url) => {
   if (!url) return '';
   return url.startsWith('http') ? url : `http://127.0.0.1:8080/${url}`;
+};
+
+// 图片上传成功回调
+const handleImageUploadSuccess = (data) => {
+  form.image = data.url;
+  ElMessage.success('图片上传成功');
 };
 
 // 获取商品列表
@@ -203,4 +232,5 @@ onMounted(fetchData);
 .title { font-size: 18px; font-weight: bold; color: #409EFF; }
 .price-text { color: #f56c6c; font-weight: bold; font-size: 16px; }
 .img-slot { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; background: #f5f7fa; color: #909399; font-size: 12px; }
+.upload-wrapper { display: flex; flex-direction: column; gap: 10px; }
 </style>

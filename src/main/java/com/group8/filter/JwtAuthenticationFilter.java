@@ -5,6 +5,7 @@ import com.group8.entity.User;
 import com.group8.service.AuthService;
 import com.group8.service.UserService;
 import com.group8.util.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -47,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
-                System.out.println("无法解析JWT token");
+                log.warn("无法解析JWT token");
             }
         }
 

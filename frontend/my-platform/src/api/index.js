@@ -43,3 +43,19 @@ export const userApi = {
 export const statApi = {
   getOverview: () => request.get('/api/statistics/overview'),
 };
+
+// 文件上传
+export const fileApi = {
+    upload: (file,dir = 'upload') =>{
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('dir',dir);
+        return request.post('/api/file/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+    },
+    delete: (url) => request.delete('/api/file/delete',{ params: {url}}),
+};

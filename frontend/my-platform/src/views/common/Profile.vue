@@ -12,6 +12,28 @@
           </template>
           
           <el-form :model="userForm" label-width="100px" v-loading="loading" style="max-width: 500px; margin-top: 10px;">
+            <el-form-item label="头像">
+              <div class="avatar-upload-wrapper">
+                <image-upload 
+                  dir="avatar" 
+                  button-text="上传新头像"
+                  :max-size="5"
+                  @success="handleAvatarUploadSuccess" 
+                />
+                <el-image 
+                  v-if="userForm.avatar" 
+                  :src="formatAvatar(userForm.avatar)" 
+                  style="width: 120px; height: 120px; margin-top: 10px; border-radius: 8px;" 
+                  fit="cover"
+                  :preview-src-list="[formatAvatar(userForm.avatar)]"
+                >
+                  <template #error>
+                    <div class="img-slot">头像加载失败</div>
+                  </template>
+                </el-image>
+              </div>
+            </el-form-item>
+            
             <el-form-item label="用户名">
               <el-input v-model="userForm.username" placeholder="请输入新的用户名" clearable />
               <div class="form-tip">注意：修改用户名后需重新登录</div>
@@ -93,6 +115,7 @@ import { useRouter } from 'vue-router';
 import request from '../../utils/request';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { User, InfoFilled, Check } from '@element-plus/icons-vue';
+import ImageUpload from '@/components/ImageUpload.vue';
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -103,6 +126,7 @@ const userForm = reactive({
   phone: '',
   email: '',
   address: '',
+  avatar: '',
   createTime: '',
   updateTime: ''
 });
@@ -115,20 +139,35 @@ const fetchProfile = async () => {
   try {
     const res = await request.get('/users/profile');
     if (res.code === 1) {
-      userForm.username = res.data.username;
+       const profileUsername = res.data.username || res.data.userName || '';
+      userForm.username = profileUsername;
       userForm.phone = res.data.phone;
       userForm.email = res.data.email;
       userForm.address = res.data.address;
+      userForm.avatar = res.data.avatar || '';
       userForm.createTime = res.data.createTime;
       userForm.updateTime = res.data.updateTime;
       // 记录初始用户名
-      originalUsername.value = res.data.username;
+      originalUsername.value = profileUsername;
+      userStore.setProfile({ username: profileUsername, avatar: userForm.avatar });
     }
   } catch (err) {
     console.error("加载失败", err);
   } finally {
     loading.value = false;
   }
+};
+
+// 格式化头像 URL
+const formatAvatar = (url) => {
+  if (!url) return '';
+  return url.startsWith('http') ? url : `http://127.0.0.1:8080/${url}`;
+};
+
+// 头像上传成功回调
+const handleAvatarUploadSuccess = (data) => {
+  userForm.avatar = data.url;
+  ElMessage.success('头像上传成功');
 };
 
 const handleUpdate = async () => {
@@ -139,13 +178,15 @@ const handleUpdate = async () => {
     const isUsernameChanged = userForm.username !== originalUsername.value;
 
     const res = await request.put('/users/profile', {
-      userName: userForm.username,
+      username: userForm.username,
       phone: userForm.phone,
       email: userForm.email,
-      address: userForm.address
+      address: userForm.address,
+      avatar: userForm.avatar
     });
     
     if (res.code === 1) {
+      userStore.setProfile({ username: userForm.username, avatar: userForm.avatar });
       if (isUsernameChanged) {
         // 如果改了用户名，强制下线
         ElMessageBox.alert(
@@ -182,4 +223,6 @@ onMounted(fetchProfile);
 .info-label { color: #606266; font-size: 14px; }
 .info-content { color: #303133; font-size: 14px; font-weight: 500; }
 .status-badge { font-size: 13px; color: #67c23a; }
+.avatar-upload-wrapper { display: flex; flex-direction: column; gap: 10px; }
+.img-slot { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; background: #f5f7fa; color: #909399; font-size: 12px; }
 </style>

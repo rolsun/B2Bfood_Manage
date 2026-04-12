@@ -63,7 +63,7 @@
             {{ {1:'采购商', 2:'供应商', 3:'管理员'}[userStore.userType] }}
           </el-tag>
           <span class="user-display">{{ userStore.username }}</span>
-          <el-avatar :size="32" icon="UserFilled" />
+          <el-avatar :size="32" :src="formatAvatar(userStore.avatar)" icon="UserFilled" />
         </div>
       </el-header>
       <el-main class="content-area">
@@ -74,6 +74,7 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { useRouter } from 'vue-router';
 import request from '../utils/request';
@@ -82,6 +83,22 @@ import { DataLine, Shop, ShoppingCart, List, Box, Van, Wallet, Service, UserFill
 
 const userStore = useUserStore();
 const router = useRouter();
+
+const formatAvatar = (url) => {
+  if (!url) return '';
+  return url.startsWith('http') ? url : `http://127.0.0.1:8080/${url}`;
+};
+
+const loadProfile = async () => {
+  try {
+    const res = await request.get('/users/profile');
+    if (res.code === 1 && res.data) {
+      userStore.setProfile(res.data);
+    }
+  } catch (error) {
+    console.error('加载用户资料失败', error);
+  }
+};
 
 const handleLogout = () => {
   ElMessageBox.confirm('确定要退出 B2B 食材管理系统吗？', '提示', { type: 'warning' }).then(async () => {
@@ -92,6 +109,8 @@ const handleLogout = () => {
     }
   });
 };
+
+onMounted(loadProfile);
 </script>
 
 <style scoped>

@@ -42,7 +42,7 @@ public class UserController {
         log.info("更新当前用户信息，请求：{}", request);
         Long userId = getCurrentUserId(authentication);
         // 在用户信息更新前验证参数
-        if (request.getuserName() == null || request.getuserName().trim().isEmpty()) {
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
             return Result.error("用户名不能为空");
         }
 

@@ -1,10 +1,12 @@
 package com.group8.service.impl;
 
 import com.group8.entity.User;
+import com.group8.exception.BusinessException;
 import com.group8.mapper.UserMapper;
 import com.group8.service.AuthService;
 import com.group8.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,22 +37,13 @@ public class AuthServiceImpl implements AuthService {
     private static final String BLACKLIST_PREFIX = "blacklist:";
 
 
-    @Override
-    public String login(String username, String password) throws Exception {
-        User user = userMapper.findByUsername(username);
-        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            return jwtUtil.generateToken(user);
-        } else {
-            throw new Exception("用户名或密码错误");
-        }
-    }
 
     @Override
     public Map<String, Object> loginWithUserInfo(String username, String password) {
         // 1. 验证用户凭据
         User user = userService.getUserByUsername(username);
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("用户名或密码错误");
+            throw new BusinessException("用户名或密码错误");
         }
 
         // 2. 生成 JWT token
@@ -66,6 +59,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "userRoleCount", allEntries = true)
     public void register(User user) throws Exception {
         // 检查用户名是否已存在
         User existingUser = userMapper.findByUsername(user.getUserName());

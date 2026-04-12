@@ -20,7 +20,7 @@ import java.util.List;
 @Slf4j
 @Service
 @Transactional
-public class AfterSalesServiceImpl implements AfterSalesService {
+public class  AfterSalesServiceImpl implements AfterSalesService {
 
     @Autowired
     private AfterSalesMapper afterSalesMapper;
